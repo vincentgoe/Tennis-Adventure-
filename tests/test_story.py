@@ -86,3 +86,28 @@ def test_every_scene_ending_and_player_image_is_animated():
     still = [image for image in sorted(images)
              if "<animate" not in (ASSETS / image).read_text(encoding="utf-8")]
     assert still == []
+
+
+def test_every_player_image_exists_and_is_animated():
+    """specs/scene-polish.md: street clothes and tennis outfit."""
+    story = load_story()
+    images = [entry["image"] for entry in story.get("player", [])]
+    assert len(images) >= 2
+    problems = [image for image in images
+                if not (ASSETS / image).is_file()
+                or "<animate" not in (ASSETS / image).read_text(encoding="utf-8")]
+    assert problems == []
+
+
+def test_every_speaking_action_has_a_bubble_anchor_inside_the_image():
+    """specs/scene-polish.md: people speak in bubbles above their heads."""
+    story = load_story()
+    problems = []
+    for scene_id, scene in story["scenes"].items():
+        for action in scene["actions"]:
+            if "speaker" not in action:
+                continue
+            anchor = action.get("speaker_at")
+            if anchor is None or not _inside_image(anchor[0], anchor[1]):
+                problems.append(f"{scene_id}.{action['id']}")
+    assert problems == []
