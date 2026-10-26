@@ -61,3 +61,17 @@ def test_no_hotspots_after_ending(mini_story, make_state):
     state = make_state(scene="shed", items=["key"], ending="A")
 
     assert scene_hotspots(state, story) == []
+
+
+def test_hotspot_carries_name_and_label_position(mini_story, make_state):
+    """The label above a hotspot comes from its name (author feedback:
+    labels instead of borders and dots)."""
+    door = mini_story["scenes"]["shed"]["actions"][0]
+    door["hotspot"] = {"x": 10, "y": 20, "w": 30, "h": 30,
+                       "name": "Shed door", "label_at": [25, 15]}
+    state = make_state(scene="shed")
+
+    spot = next(h for h in scene_hotspots(state, mini_story) if h["id"] == "open_shed")
+
+    assert spot["name"] == "Shed door"
+    assert spot["label_at"] == [25, 15]

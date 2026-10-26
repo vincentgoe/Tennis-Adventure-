@@ -47,6 +47,18 @@ def test_every_action_has_a_hotspot_inside_the_image():
     assert problems == []
 
 
+def test_every_non_exit_hotspot_has_a_name():
+    """specs/point-and-click.md: names are shown as labels in the image."""
+    story = load_story()
+    problems = []
+    for scene_id, scene in story["scenes"].items():
+        for action in scene["actions"]:
+            spot = action.get("hotspot", {})
+            if spot.get("marker") != "exit" and not spot.get("name"):
+                problems.append(f"{scene_id}.{action['id']}")
+    assert problems == []
+
+
 def test_every_scene_has_a_player_position_inside_the_image():
     """specs/point-and-click.md: the player stands in every scene."""
     story = load_story()
