@@ -171,6 +171,7 @@ def scene_hotspots(state, story):
                 "w": spot["w"],
                 "h": spot["h"],
                 "marker": spot.get("marker"),
+                "direction": spot.get("direction"),
                 "name": spot.get("name"),
                 "label_at": spot.get("label_at"),
                 # Blocked-but-visible actions are clickable too. `allowed`
