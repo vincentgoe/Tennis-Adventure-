@@ -334,9 +334,9 @@
     "locker_room": {
       "name": "Locker room",
       "player": {
-        "x": 146,
-        "y": 128,
-        "scale": 1.2
+        "x": 140,
+        "y": 88,
+        "scale": 2.0
       },
       "texts": [
         {
@@ -622,6 +622,15 @@
       },
       "texts": [
         {
+          "when": {
+            "flags": [
+              "shed_unlocked"
+            ]
+          },
+          "text": "An old wooden shed in the corner of the grounds. The padlock lies in the grass, and the door stands ajar.",
+          "image": "scenes/shed_open.svg"
+        },
+        {
           "text": "An old wooden shed in the corner of the grounds. The paint is peeling, and a heavy padlock hangs on the door.",
           "image": "scenes/shed.svg"
         }
@@ -635,13 +644,21 @@
               "key"
             ]
           },
+          "hide_when": {
+            "flags": [
+              "shed_unlocked"
+            ]
+          },
           "blocked_text": [
             {
               "text": "You pull at the door, but the padlock won't budge. You'll need a key."
             }
           ],
           "effects": {
-            "move_to": "shed_inside"
+            "move_to": "shed_inside",
+            "set_flags": [
+              "shed_unlocked"
+            ]
           },
           "icon": ":material/lock_open:",
           "hotspot": {
@@ -655,6 +672,26 @@
               100
             ],
             "drop": "padlock"
+          }
+        },
+        {
+          "id": "enter_shed",
+          "label": "Go inside",
+          "requires": {
+            "flags": [
+              "shed_unlocked"
+            ]
+          },
+          "effects": {
+            "move_to": "shed_inside"
+          },
+          "icon": ":material/door_open:",
+          "hotspot": {
+            "x": 134,
+            "y": 84,
+            "w": 52,
+            "h": 72,
+            "name": "Shed door"
           }
         },
         {
@@ -711,7 +748,8 @@
             "w": 28,
             "h": 46,
             "name": "Wilson Blade"
-          }
+          },
+          "closeup": "closeups/wilson.svg"
         },
         {
           "id": "inspect_yonex",
@@ -729,7 +767,8 @@
             "w": 28,
             "h": 46,
             "name": "Old Yonex"
-          }
+          },
+          "closeup": "closeups/yonex.svg"
         },
         {
           "id": "take_wilson",
@@ -920,6 +959,8 @@
     "replay_match": "Replay match",
     "give_up": "Give up",
     "give_up_confirm": "Giving up starts a completely new game. All your progress will be lost. Are you sure?",
-    "not_available": "You can't do that right now."
+    "not_available": "You can't do that right now.",
+    "continue": "Continue",
+    "the_end": "THE END"
   }
 }

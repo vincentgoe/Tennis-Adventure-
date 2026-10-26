@@ -131,6 +131,13 @@ def scene_image(state, story):
     return entry.get("image") if entry is not None else None
 
 
+def is_hidden(state, action, story):
+    """True while the action's `hide_when` conditions hold. A hidden action is
+    neither shown nor allowed, even if it has a blocked_text."""
+    hide_when = action.get("hide_when")
+    return hide_when is not None and conditions_met(state, hide_when, story)
+
+
 def available_actions(state, story):
     """Ids of the actions to show: allowed ones, plus blocked ones that have a
     blocked_text (those are shown and explained). All others are hidden."""
@@ -138,6 +145,8 @@ def available_actions(state, story):
         return []
     visible = []
     for action in story["scenes"][state.scene]["actions"]:
+        if is_hidden(state, action, story):
+            continue
         allowed = conditions_met(state, action.get("requires", {}), story)
         if allowed or "blocked_text" in action:
             visible.append(action["id"])
@@ -187,11 +196,21 @@ def _message_source(state, action_id, story):
     if state.ending is not None:
         return None
     action = find_action(story, state.scene, action_id)
-    if action is None:
+    if action is None or is_hidden(state, action, story):
         return None
     if conditions_met(state, action.get("requires", {}), story):
         return action
     return first_matching_entry(action.get("blocked_text", []), state, story)
+
+
+def closeup_for(state, action_id, story):
+    """The close-up image this action shows (e.g. a spinning racket), if the
+    action is allowed in this state. None otherwise."""
+    source = _message_source(state, action_id, story)
+    action = find_action(story, state.scene, action_id) if source is not None else None
+    if action is None or source is not action:
+        return None
+    return action.get("closeup")
 
 
 def speaker_anchor(state, action_id, story):
@@ -226,9 +245,9 @@ def apply_action(state, action_id, story):
     if state.ending is not None:
         return state, False, not_available
 
-    # 2. The action belongs to the current scene (PT R1)
+    # 2. The action belongs to the current scene and is not hidden (PT R1)
     action = find_action(story, state.scene, action_id)
-    if action is None:
+    if action is None or is_hidden(state, action, story):
         return state, False, not_available
 
     # 3. All prerequisites are met (PT R1)

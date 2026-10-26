@@ -42,6 +42,21 @@
                      color: #ffffff; background: #d9743a; border: 0; border-radius: 3px; }
       #menu button:hover { background: #c4642f; }
 
+      /* Item reveal: darkened scene, turning light rays, a slowly spinning item */
+      #reveal { position: absolute; inset: 0; z-index: 2; display: none; overflow: hidden;
+                background: radial-gradient(circle at 50% 42%, rgba(60, 45, 15, 0.55), rgba(0, 0, 0, 0.88)); }
+      #rays { position: absolute; left: 50%; top: 40%; width: 150%; aspect-ratio: 1;
+              border-radius: 50%; animation: rays 24s linear infinite;
+              background: repeating-conic-gradient(rgba(255, 228, 140, 0.16) 0deg 9deg, transparent 9deg 18deg); }
+      @keyframes rays { from { transform: translate(-50%, -50%) rotate(0deg); }
+                        to   { transform: translate(-50%, -50%) rotate(360deg); } }
+      #item { position: absolute; left: 50%; top: 40%; height: 68%; transform: translate(-50%, -50%);
+              perspective: 700px; }
+      #item .spinner { height: 100%; animation: turn 8s linear infinite; }
+      #item svg { height: 100%; width: auto; aspect-ratio: 120 / 210; display: block;
+                  filter: drop-shadow(0 0 10px rgba(255, 220, 120, 0.85)); }
+      @keyframes turn { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+
       /* While a conversation runs, a click anywhere moves it on */
       #catcher { position: absolute; inset: 0; z-index: 2; display: none; cursor: pointer; }
 
@@ -80,6 +95,7 @@
       <div id="scene"></div>
       <svg id="overlay" xmlns="http://www.w3.org/2000/svg"></svg>
       <div id="menu"></div>
+      <div id="reveal"><div id="rays"></div><div id="item"><div class="spinner"></div></div></div>
       <div id="catcher"></div>
       <div id="dialog"><div id="speaker"></div><div id="dialog-text"></div><div class="more">▼</div></div>
       <div id="bubble"><div id="bubble-name"></div><div id="bubble-text"></div><div class="more">▼</div></div>
@@ -231,6 +247,7 @@
         if (conversation && conversation.typing) clearTimeout(conversation.typing.timer);
         conversation = null;
         wrap.classList.remove("talking");
+        $("reveal").style.display = "none";
         dialog.style.display = "none";
         bubble.style.display = "none";
         catcher.style.display = "none";
@@ -296,6 +313,10 @@
                          speaker: message.speaker, anchor: message.anchor };
         catcher.style.display = "block";
         wrap.classList.add("talking");
+        if (message.closeup_svg) {           // item reveal behind the text box
+          document.querySelector("#item .spinner").innerHTML = message.closeup_svg;
+          $("reveal").style.display = "block";
+        }
         showPiece();
       }
 
@@ -375,8 +396,21 @@
         spots.forEach(rectEl => overlay.appendChild(rectEl));
       }
 
+      // Keep the whole picture inside the browser window (wide layout)
+      function fitToWindow() {
+        let windowHeight = window.innerHeight;
+        try { windowHeight = window.parent.innerHeight; } catch (e) { /* other origin */ }
+        if (!args) return;
+        const maxWidth = windowHeight * 0.7 * args.width / args.height;
+        wrap.style.maxWidth = Math.round(maxWidth) + "px";
+        wrap.style.margin = "0 auto";
+        requestAnimationFrame(updateHeight);
+      }
+      try { window.parent.addEventListener("resize", fitToWindow); } catch (e) { /* ignore */ }
+
       function render(newArgs) {
         args = newArgs;
+        fitToWindow();
         const sceneKey = JSON.stringify([args.svg, args.hotspots]);
         if (sceneKey !== lastScene) {
           lastScene = sceneKey;
