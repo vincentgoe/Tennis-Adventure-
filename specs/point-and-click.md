@@ -83,7 +83,7 @@ This makes exploring more fun and is a step towards the world map (stage 3).
 
 ## Done when
 
-- [ ] New tests are written first and are green:
+- [x] New tests are written first and are green:
   - `scene_hotspots` returns hotspots only for visible actions, including
     blocked actions with a `blocked_text`.
   - In `story.json`, every action has a hotspot inside the image, and every
@@ -91,8 +91,8 @@ This makes exploring more fun and is a step towards the world map (stage 3).
   - Every non-exit hotspot has a name, and `scene_hotspots` passes it on.
   - `speaker_for` returns the action's speaker, the blocked text's speaker, or
     `None` for objects and narration.
-- [ ] All existing tests are still green and unchanged.
-- [ ] Manual check: play from the start to an ending using only clicks in the
+- [x] All existing tests are still green and unchanged.
+- [x] Manual check: play from the start to an ending using only clicks in the
       image. The locked door shows its message, the racket opens a menu,
       hidden actions are not clickable, people's lines appear letter by letter
       and object texts at once. Restarting the app still resumes.
