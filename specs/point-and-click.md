@@ -96,4 +96,4 @@ This makes exploring more fun and is a step towards the world map (stage 3).
       image. The locked door shows its message, the racket opens a menu,
       hidden actions are not clickable, people's lines appear letter by letter
       and object texts at once. Restarting the app still resumes.
-- [ ] Committed on `point-and-click`, pushed, reviewed, merged into `main`.
+- [x] Committed on `point-and-click`, pushed, reviewed, merged into `main`.
