@@ -127,45 +127,59 @@ def _at_court_after_round_two(**changes):
     return GameState(**state)
 
 
-def test_groundskeeper_scene_is_reachable_before_the_racket_choice():
-    """specs/scene-polish.md: before the choice, he leads to his own scene."""
+# Corrected per specs/bigger-world.md ("Changes to existing tests"): the
+# groundskeeper now stands on Court 2 instead of the edge of the Center Court.
+# What is checked stays the same: hidden before the hint, talkable without a
+# scene change before and after the racket choice.
+
+
+def test_groundskeeper_on_court_2_only_after_the_hint():
+    """specs/bigger-world.md: he appears on Court 2 after the office's hint."""
     from logic import available_actions
     story = load_story()
-    actions = available_actions(_at_court_after_round_two(), story)
+    before_hint = _at_court_after_round_two(
+        scene="court_2", items=[],
+        flags={"registered", "changed", "needs_racket"})
+    after_hint = _at_court_after_round_two(scene="court_2", items=[])
 
-    assert "go_groundskeeper" in actions
-    assert "talk_groundskeeper_courtside" not in actions
+    assert not [a for a in available_actions(before_hint, story) if a.startswith("talk_groundskeeper")]
+    assert "talk_groundskeeper_first" in available_actions(after_hint, story)
 
 
-def test_groundskeeper_is_a_courtside_talk_after_the_racket_choice():
-    """specs/scene-polish.md: after the choice, he is a side interaction at
-    the court edge, and talking to him does not change the scene."""
+def test_groundskeeper_talk_on_court_2_keeps_the_scene():
+    """specs/bigger-world.md (was: courtside talk in specs/scene-polish.md):
+    talking to him never changes the scene, before and after the choice."""
     from logic import apply_action, available_actions, speaker_for
     story = load_story()
-    state = _at_court_after_round_two(items=["key", "yonex"], choices={"racket": "yonex"})
 
-    actions = available_actions(state, story)
-    assert "go_groundskeeper" not in actions
-    assert "talk_groundskeeper_courtside" in actions
+    before_choice = _at_court_after_round_two(scene="court_2")
+    new_state, accepted, message = apply_action(before_choice, "talk_groundskeeper_has_key", story)
+    assert accepted is True and new_state.scene == "court_2" and message
 
-    new_state, accepted, message = apply_action(state, "talk_groundskeeper_courtside", story)
+    after_choice = _at_court_after_round_two(
+        scene="court_2", items=["key", "yonex"], choices={"racket": "yonex"})
+    assert "talk_groundskeeper_after_choice" in available_actions(after_choice, story)
+    new_state, accepted, message = apply_action(after_choice, "talk_groundskeeper_after_choice", story)
     assert accepted is True
-    assert new_state == state
+    assert new_state == after_choice
     assert message
-    assert speaker_for(state, "talk_groundskeeper_courtside", story) == "Groundskeeper"
+    assert speaker_for(after_choice, "talk_groundskeeper_after_choice", story) == "Groundskeeper"
 
 
 def test_the_shed_stays_open_after_unlocking():
     """specs/scene-polish.md: leaving the shed and coming back does not ask to
-    unlock it again."""
+    unlock it again. Corrected per specs/bigger-world.md: the way back now
+    leads through the back corner and the main path."""
     from logic import apply_action, available_actions
     story = load_story()
     state = _at_court_after_round_two(scene="shed")
 
     state, accepted, _ = apply_action(state, "open_shed", story)
     assert accepted is True and state.scene == "shed_inside"
-    state, _, _ = apply_action(state, "leave_shed_inside", story)
-    state, _, _ = apply_action(state, "go_shed", story)
+    for action_id in ["leave_shed_inside", "leave_shed", "go_back_corner"]:
+        state, accepted, _ = apply_action(state, action_id, story)
+        assert accepted is True, action_id
+    assert state.scene == "shed"
 
     actions = available_actions(state, story)
     assert "open_shed" not in actions
