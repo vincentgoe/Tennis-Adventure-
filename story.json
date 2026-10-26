@@ -18,6 +18,11 @@
   "scenes": {
     "grounds": {
       "name": "Tournament grounds",
+      "player": {
+        "x": 78,
+        "y": 120,
+        "scale": 1.0
+      },
       "texts": [
         {
           "when": {
@@ -40,7 +45,14 @@
           "effects": {
             "move_to": "office"
           },
-          "icon": ":material/directions_walk:"
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 12,
+            "y": 40,
+            "w": 86,
+            "h": 60,
+            "name": "Office"
+          }
         },
         {
           "id": "go_locker_room",
@@ -60,7 +72,8 @@
                   "registered"
                 ]
               },
-              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\""
+              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
+              "speaker": "Steward"
             },
             {
               "text": "The locker room is closed. The tournament has already started."
@@ -69,7 +82,14 @@
           "effects": {
             "move_to": "locker_room"
           },
-          "icon": ":material/directions_walk:"
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 170,
+            "y": 46,
+            "w": 78,
+            "h": 54,
+            "name": "Lockers"
+          }
         },
         {
           "id": "go_courts",
@@ -87,7 +107,8 @@
                   "registered"
                 ]
               },
-              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\""
+              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
+              "speaker": "Steward"
             },
             {
               "text": "You're still in your street clothes. Get changed in the locker room first."
@@ -96,7 +117,18 @@
           "effects": {
             "move_to": "court"
           },
-          "icon": ":material/directions_walk:"
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 110,
+            "y": 102,
+            "w": 140,
+            "h": 66,
+            "name": "Courts",
+            "label_at": [
+              180,
+              114
+            ]
+          }
         },
         {
           "id": "go_shed",
@@ -114,7 +146,8 @@
                   "registered"
                 ]
               },
-              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\""
+              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
+              "speaker": "Steward"
             },
             {
               "text": "Not now. Get changed first, your first match starts soon."
@@ -123,12 +156,24 @@
           "effects": {
             "move_to": "shed"
           },
-          "icon": ":material/directions_walk:"
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 262,
+            "y": 58,
+            "w": 52,
+            "h": 42,
+            "name": "Shed"
+          }
         }
       ]
     },
     "office": {
       "name": "Tournament office",
+      "player": {
+        "x": 48,
+        "y": 116,
+        "scale": 1.4
+      },
       "texts": [
         {
           "text": "A small office by the entrance. A woman sits behind a desk covered in draw sheets.",
@@ -139,6 +184,7 @@
         {
           "id": "register",
           "label": "Register for the tournament",
+          "speaker": "Woman at the desk",
           "requires": {
             "not_flags": [
               "registered"
@@ -150,11 +196,19 @@
             ],
             "show_text": "\"Name?\" The woman at the desk runs her finger down a list. \"There you are.\" She hands you a player badge. \"The group stage starts soon. You can get changed in the locker room.\""
           },
-          "icon": ":material/badge:"
+          "icon": ":material/badge:",
+          "hotspot": {
+            "x": 96,
+            "y": 66,
+            "w": 160,
+            "h": 80,
+            "name": "Front desk"
+          }
         },
         {
           "id": "ask_for_racket",
           "label": "Ask for a spare racket",
+          "speaker": "Woman at the desk",
           "requires": {
             "flags": [
               "needs_racket"
@@ -169,11 +223,19 @@
             ],
             "show_text": "The woman at the desk shakes her head. \"A broken string? I'm sorry, we gave out our last spare racket this morning.\" She thinks for a moment. \"Ask the groundskeeper. He's usually somewhere by the courts. If anyone knows where to find a racket, it's him.\""
           },
-          "icon": ":material/help:"
+          "icon": ":material/help:",
+          "hotspot": {
+            "x": 96,
+            "y": 66,
+            "w": 160,
+            "h": 80,
+            "name": "Front desk"
+          }
         },
         {
           "id": "talk_office_no_racket",
           "label": "Talk to the woman at the desk",
+          "speaker": "Woman at the desk",
           "requires": {
             "flags": [
               "knows_groundskeeper"
@@ -183,18 +245,33 @@
           "effects": {
             "show_text": "\"Did you find the groundskeeper? He's usually somewhere by the courts.\""
           },
-          "icon": ":material/chat:"
+          "icon": ":material/chat:",
+          "hotspot": {
+            "x": 96,
+            "y": 66,
+            "w": 160,
+            "h": 80,
+            "name": "Front desk"
+          }
         },
         {
           "id": "talk_office_after_choice",
           "label": "Talk to the woman at the desk",
+          "speaker": "Woman at the desk",
           "requires": {
             "choice_made": "racket"
           },
           "effects": {
             "show_text": "\"Good luck out there!\""
           },
-          "icon": ":material/chat:"
+          "icon": ":material/chat:",
+          "hotspot": {
+            "x": 96,
+            "y": 66,
+            "w": 160,
+            "h": 80,
+            "name": "Front desk"
+          }
         },
         {
           "id": "leave_office",
@@ -202,12 +279,24 @@
           "effects": {
             "move_to": "grounds"
           },
-          "icon": ":material/directions_walk:"
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 286,
+            "y": 150,
+            "w": 30,
+            "h": 26,
+            "marker": "exit"
+          }
         }
       ]
     },
     "locker_room": {
       "name": "Locker room",
+      "player": {
+        "x": 146,
+        "y": 128,
+        "scale": 1.2
+      },
       "texts": [
         {
           "text": "Rows of lockers and a wooden bench. It smells of fresh towels.",
@@ -229,7 +318,14 @@
             ],
             "show_text": "You change into your tennis kit and check your racket one last time. The strings feel good. Time to play."
           },
-          "icon": ":material/checkroom:"
+          "icon": ":material/checkroom:",
+          "hotspot": {
+            "x": 16,
+            "y": 16,
+            "w": 292,
+            "h": 104,
+            "name": "Lockers"
+          }
         },
         {
           "id": "leave_locker_room",
@@ -237,12 +333,24 @@
           "effects": {
             "move_to": "grounds"
           },
-          "icon": ":material/directions_walk:"
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 4,
+            "y": 150,
+            "w": 30,
+            "h": 26,
+            "marker": "exit"
+          }
         }
       ]
     },
     "court": {
       "name": "Courts",
+      "player": {
+        "x": 150,
+        "y": 134,
+        "scale": 1.0
+      },
       "texts": [
         {
           "when": {
@@ -275,7 +383,14 @@
           "effects": {
             "play_match": true
           },
-          "icon": ":material/sports_tennis:"
+          "icon": ":material/sports_tennis:",
+          "hotspot": {
+            "x": 116,
+            "y": 78,
+            "w": 88,
+            "h": 44,
+            "name": "Net"
+          }
         },
         {
           "id": "go_groundskeeper",
@@ -288,7 +403,14 @@
           "effects": {
             "move_to": "groundskeeper"
           },
-          "icon": ":material/directions_walk:"
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 0,
+            "y": 108,
+            "w": 50,
+            "h": 60,
+            "name": "Groundskeeper"
+          }
         },
         {
           "id": "leave_court",
@@ -296,12 +418,24 @@
           "effects": {
             "move_to": "grounds"
           },
-          "icon": ":material/directions_walk:"
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 286,
+            "y": 150,
+            "w": 30,
+            "h": 26,
+            "marker": "exit"
+          }
         }
       ]
     },
     "groundskeeper": {
       "name": "Groundskeeper",
+      "player": {
+        "x": 206,
+        "y": 106,
+        "scale": 1.5
+      },
       "texts": [
         {
           "text": "The groundskeeper is raking the clay next to the court.",
@@ -312,6 +446,7 @@
         {
           "id": "talk_groundskeeper_first",
           "label": "Talk to the groundskeeper",
+          "speaker": "Groundskeeper",
           "requires": {
             "not_items": [
               "key"
@@ -321,11 +456,19 @@
             "add_item": "key",
             "show_text": "The groundskeeper leans on his rake and listens. \"Broken string in the group stage? Bad luck, buddy.\" He digs into his pocket and holds out a rusty key. \"There's an old shed in the corner of the grounds. There should still be a few rackets in there.\""
           },
-          "icon": ":material/chat:"
+          "icon": ":material/chat:",
+          "hotspot": {
+            "x": 106,
+            "y": 66,
+            "w": 56,
+            "h": 98,
+            "name": "Groundskeeper"
+          }
         },
         {
           "id": "talk_groundskeeper_has_key",
           "label": "Talk to the groundskeeper",
+          "speaker": "Groundskeeper",
           "requires": {
             "items": [
               "key"
@@ -335,18 +478,33 @@
           "effects": {
             "show_text": "\"There should still be spare rackets in the shed.\""
           },
-          "icon": ":material/chat:"
+          "icon": ":material/chat:",
+          "hotspot": {
+            "x": 106,
+            "y": 66,
+            "w": 56,
+            "h": 98,
+            "name": "Groundskeeper"
+          }
         },
         {
           "id": "talk_groundskeeper_after_choice",
           "label": "Talk to the groundskeeper",
+          "speaker": "Groundskeeper",
           "requires": {
             "choice_made": "racket"
           },
           "effects": {
             "show_text": "\"So, did you find a racket?\""
           },
-          "icon": ":material/chat:"
+          "icon": ":material/chat:",
+          "hotspot": {
+            "x": 106,
+            "y": 66,
+            "w": 56,
+            "h": 98,
+            "name": "Groundskeeper"
+          }
         },
         {
           "id": "leave_groundskeeper",
@@ -354,12 +512,24 @@
           "effects": {
             "move_to": "court"
           },
-          "icon": ":material/directions_walk:"
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 286,
+            "y": 150,
+            "w": 30,
+            "h": 26,
+            "marker": "exit"
+          }
         }
       ]
     },
     "shed": {
       "name": "Old shed",
+      "player": {
+        "x": 244,
+        "y": 108,
+        "scale": 1.3
+      },
       "texts": [
         {
           "text": "An old wooden shed in the corner of the grounds. The paint is peeling, and a heavy padlock hangs on the door.",
@@ -383,7 +553,14 @@
           "effects": {
             "move_to": "shed_inside"
           },
-          "icon": ":material/lock_open:"
+          "icon": ":material/lock_open:",
+          "hotspot": {
+            "x": 134,
+            "y": 84,
+            "w": 52,
+            "h": 72,
+            "name": "Shed door"
+          }
         },
         {
           "id": "leave_shed",
@@ -391,12 +568,24 @@
           "effects": {
             "move_to": "grounds"
           },
-          "icon": ":material/directions_walk:"
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 4,
+            "y": 150,
+            "w": 30,
+            "h": 26,
+            "marker": "exit"
+          }
         }
       ]
     },
     "shed_inside": {
       "name": "Inside the shed",
+      "player": {
+        "x": 40,
+        "y": 96,
+        "scale": 1.6
+      },
       "texts": [
         {
           "when": {
@@ -420,7 +609,14 @@
           "effects": {
             "show_text": "A Wilson Blade. The grip is clean, the strings are tight, and there's barely a scratch on the frame. It looks almost new. This could be exactly what you need."
           },
-          "icon": ":material/search:"
+          "icon": ":material/search:",
+          "hotspot": {
+            "x": 86,
+            "y": 54,
+            "w": 46,
+            "h": 88,
+            "name": "Wilson Blade"
+          }
         },
         {
           "id": "inspect_yonex",
@@ -431,7 +627,14 @@
           "effects": {
             "show_text": "An old Yonex. The paint is chipped, the grip is worn thin, and the model name has faded completely. It doesn't look like much. You turn it in your hands, and on the side of the frame, barely readable, you make out two faded words: *Roger F.*"
           },
-          "icon": ":material/search:"
+          "icon": ":material/search:",
+          "hotspot": {
+            "x": 136,
+            "y": 54,
+            "w": 48,
+            "h": 90,
+            "name": "Old Yonex"
+          }
         },
         {
           "id": "take_wilson",
@@ -446,7 +649,14 @@
             },
             "show_text": "You take the racket. A voice crackles over the loudspeaker: \"Next match starting soon!\" You'd better hurry back to the courts."
           },
-          "icon": ":material/back_hand:"
+          "icon": ":material/back_hand:",
+          "hotspot": {
+            "x": 86,
+            "y": 54,
+            "w": 46,
+            "h": 88,
+            "name": "Wilson Blade"
+          }
         },
         {
           "id": "take_yonex",
@@ -461,7 +671,14 @@
             },
             "show_text": "You take the racket. A voice crackles over the loudspeaker: \"Next match starting soon!\" You'd better hurry back to the courts."
           },
-          "icon": ":material/back_hand:"
+          "icon": ":material/back_hand:",
+          "hotspot": {
+            "x": 136,
+            "y": 54,
+            "w": 48,
+            "h": 90,
+            "name": "Old Yonex"
+          }
         },
         {
           "id": "leave_shed_inside",
@@ -469,7 +686,14 @@
           "effects": {
             "move_to": "grounds"
           },
-          "icon": ":material/directions_walk:"
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 286,
+            "y": 150,
+            "w": 30,
+            "h": 26,
+            "marker": "exit"
+          }
         }
       ]
     }

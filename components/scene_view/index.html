@@ -1,0 +1,290 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <!--
+      Scene view for Plot Twist (specs/point-and-click.md).
+
+      Shows the scene SVG, puts clickable hotspots with name labels on top,
+      and shows the last message in a dialogue box. When a hotspot is
+      clicked, it reports {action, nonce} back to Python. It knows nothing
+      about the rules: Python decides which hotspots exist, what a click does
+      and what the message is. Talks to Streamlit with its plain postMessage
+      protocol, so no build step or extra package is needed.
+    -->
+    <style>
+      html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+      #wrap { position: relative; width: 100%; user-select: none; }
+      #scene svg { display: block; width: 100%; height: auto; border-radius: 4px; }
+      #overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+      /* Hotspots are invisible; their labels show what can be clicked */
+      .spot { fill: transparent; stroke: none; cursor: pointer; }
+      .label rect { fill: rgba(45, 58, 42, 0.82); transition: fill 0.12s; }
+      .label text { fill: #ffffff; font: bold 7px monospace; }
+      .label { pointer-events: none; }
+      .label.hot rect { fill: #d9743a; }
+
+      .exit-badge { fill: rgba(45, 58, 42, 0.8); pointer-events: none; transition: fill 0.12s; }
+      .exit-badge.hot { fill: #d9743a; }
+      .exit-arrow { fill: #ffffff; font: bold 12px monospace; pointer-events: none; }
+
+      #menu { position: absolute; display: none; min-width: 160px; z-index: 3;
+              background: #fbf7ee; border: 2px solid #2d3a2a; border-radius: 4px;
+              padding: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); }
+      #menu button { display: block; width: 100%; margin: 3px 0; padding: 7px 10px;
+                     font: 600 13px monospace; text-align: left; cursor: pointer;
+                     color: #ffffff; background: #d9743a; border: 0; border-radius: 3px; }
+      #menu button:hover { background: #c4642f; }
+
+      /* Dialogue box at the bottom of the image */
+      #dialog { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 2;
+                display: none; cursor: pointer;
+                background: rgba(251, 247, 238, 0.97); color: #2d3a2a;
+                border: 3px solid #2d3a2a; border-radius: 6px;
+                box-shadow: 0 3px 0 rgba(45, 58, 42, 0.35);
+                padding: 14px 16px 12px; font: 15px/1.45 sans-serif; }
+      #speaker { position: absolute; top: -13px; left: 12px; display: none;
+                 background: #d9743a; color: #ffffff; border: 2px solid #2d3a2a;
+                 border-radius: 4px; padding: 1px 8px; font: bold 12px monospace; }
+      #more { position: absolute; right: 10px; bottom: 4px; font: bold 11px monospace;
+              color: #d9743a; animation: blink 0.9s steps(2, start) infinite; }
+      @keyframes blink { to { visibility: hidden; } }
+    </style>
+  </head>
+  <body>
+    <div id="wrap">
+      <div id="scene"></div>
+      <svg id="overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="menu"></div>
+      <div id="dialog"><div id="speaker"></div><div id="text"></div><div id="more">▼</div></div>
+    </div>
+
+    <script>
+      const SVG_NS = "http://www.w3.org/2000/svg";
+      const wrap = document.getElementById("wrap");
+      const scene = document.getElementById("scene");
+      const overlay = document.getElementById("overlay");
+      const menu = document.getElementById("menu");
+      const dialog = document.getElementById("dialog");
+      const speakerEl = document.getElementById("speaker");
+      const textEl = document.getElementById("text");
+      const moreEl = document.getElementById("more");
+      const TYPE_DELAY_MS = 22;
+
+      let lastScene = "";
+      let shownMessageId = null;
+      let typing = null; // {timer, finish}
+
+      // --- Streamlit protocol ------------------------------------------------
+      function send(type, data) {
+        window.parent.postMessage(
+          Object.assign({ isStreamlitMessage: true, type: type }, data), "*");
+      }
+      function report(actionId) {
+        hideMenu();
+        send("streamlit:setComponentValue", {
+          value: { action: actionId, nonce: Date.now() + Math.random() },
+          dataType: "json",
+        });
+      }
+      function updateHeight() {
+        send("streamlit:setFrameHeight", { height: wrap.offsetHeight });
+      }
+
+      // --- Menu for hotspots with several actions ------------------------------
+      function pointIn(event) {
+        const box = wrap.getBoundingClientRect();
+        return { x: event.clientX - box.left, y: event.clientY - box.top };
+      }
+      function hideMenu() { menu.style.display = "none"; }
+      function showMenu(event, group) {
+        menu.innerHTML = "";
+        group.forEach(spot => {
+          const button = document.createElement("button");
+          button.textContent = spot.label;
+          button.addEventListener("click", e => { e.stopPropagation(); report(spot.id); });
+          menu.appendChild(button);
+        });
+        menu.style.display = "block";
+        const p = pointIn(event);
+        const left = Math.min(Math.max(p.x - menu.offsetWidth / 2, 4),
+                              wrap.offsetWidth - menu.offsetWidth - 4);
+        const top = Math.min(p.y + 8, wrap.offsetHeight - menu.offsetHeight - 4);
+        menu.style.left = left + "px";
+        menu.style.top = Math.max(top, 4) + "px";
+      }
+      wrap.addEventListener("click", hideMenu);
+
+      // --- Dialogue box --------------------------------------------------------
+      // Split "*word*" into italic segments; everything else is plain text.
+      function segments(text) {
+        return text.split(/(\*[^*]+\*)/).filter(Boolean).map(part =>
+          part.startsWith("*") && part.endsWith("*")
+            ? { text: part.slice(1, -1), em: true }
+            : { text: part, em: false });
+      }
+      function stopTyping() {
+        if (typing) { clearTimeout(typing.timer); typing = null; }
+      }
+      function showMessage(message) {
+        stopTyping();
+        textEl.innerHTML = "";
+        speakerEl.textContent = message.speaker || "";
+        speakerEl.style.display = message.speaker ? "block" : "none";
+        dialog.style.display = "block";
+
+        const parts = segments(message.text).map(seg => {
+          const span = document.createElement(seg.em ? "em" : "span");
+          span.style.whiteSpace = "pre-wrap";
+          textEl.appendChild(span);
+          return { span: span, text: seg.text };
+        });
+        const writeAll = () => parts.forEach(p => { p.span.textContent = p.text; });
+
+        if (!message.speaker) {           // objects and narration: all at once
+          writeAll();
+          moreEl.style.display = "block";
+          return;
+        }
+        moreEl.style.display = "none";    // a person speaks: letter by letter
+
+        // How many letters should be visible after `ms` milliseconds. Based on
+        // elapsed time, so the text catches up if the browser slows timers down.
+        const full = parts.map(p => p.text).join("");
+        const showAt = [];                // showAt[i] = time when letter i appears
+        let t = 0;
+        for (const ch of full) {
+          showAt.push(t);
+          t += ".!?".includes(ch) ? TYPE_DELAY_MS * 8 : TYPE_DELAY_MS;
+        }
+        const render = count => {
+          let left = count;
+          parts.forEach(p => {
+            p.span.textContent = p.text.slice(0, Math.max(0, left));
+            left -= p.text.length;
+          });
+        };
+        const start = performance.now();
+        const step = () => {
+          const elapsed = performance.now() - start;
+          let count = 0;
+          while (count < showAt.length && showAt[count] <= elapsed) count += 1;
+          render(count);
+          if (count >= full.length) { typing = null; moreEl.style.display = "block"; return; }
+          typing.timer = setTimeout(step, TYPE_DELAY_MS);
+        };
+        typing = {
+          timer: null,
+          finish: () => { stopTyping(); writeAll(); moreEl.style.display = "block"; },
+        };
+        step();
+      }
+      dialog.addEventListener("click", e => {
+        e.stopPropagation();
+        if (typing) typing.finish();      // first click: show the full text
+        else dialog.style.display = "none"; // second click: close
+      });
+
+      // --- Drawing the scene ---------------------------------------------------
+      function el(name, attrs) {
+        const node = document.createElementNS(SVG_NS, name);
+        for (const key in attrs) node.setAttribute(key, attrs[key]);
+        return node;
+      }
+
+      function addLabel(spot, width) {
+        const g = el("g", { class: "label" });
+        const text = el("text", { "text-anchor": "middle" });
+        text.textContent = spot.name;
+        g.appendChild(text);
+        overlay.appendChild(g);
+
+        // Default: centred above the hotspot; inside it if there is no room
+        let [cx, cy] = spot.label_at || [spot.x + spot.w / 2, spot.y - 4];
+        if (!spot.label_at && cy < 10) cy = spot.y + 10;
+        const textWidth = text.getComputedTextLength();
+        const padX = 3, boxW = textWidth + padX * 2, boxH = 10;
+        cx = Math.min(Math.max(cx, boxW / 2 + 2), width - boxW / 2 - 2);
+        text.setAttribute("x", cx);
+        text.setAttribute("y", cy);
+        g.insertBefore(el("rect", {
+          x: cx - boxW / 2, y: cy - boxH + 2.5, width: boxW, height: boxH, rx: 2 }), text);
+        return g;
+      }
+
+      function drawScene(args) {
+        hideMenu();
+        scene.innerHTML = args.svg;
+        overlay.setAttribute("viewBox", `0 0 ${args.width} ${args.height}`);
+        overlay.innerHTML = "";
+
+        // Actions that share a rectangle open one menu together
+        const groups = new Map();
+        args.hotspots.forEach(spot => {
+          const rectKey = [spot.x, spot.y, spot.w, spot.h].join(",");
+          if (!groups.has(rectKey)) groups.set(rectKey, []);
+          groups.get(rectKey).push(spot);
+        });
+
+        const spots = [];
+        groups.forEach(group => {
+          const s = group[0];
+          let marker;
+          if (s.marker === "exit") {
+            const onLeft = s.x + s.w / 2 < args.width / 2;
+            marker = el("rect", {
+              class: "exit-badge", x: s.x, y: s.y + s.h / 2 - 9, width: s.w, height: 18, rx: 3 });
+            overlay.appendChild(marker);
+            const arrow = el("text", {
+              class: "exit-arrow", x: s.x + s.w / 2, y: s.y + s.h / 2 + 4, "text-anchor": "middle" });
+            arrow.textContent = onLeft ? "◀" : "▶";
+            overlay.appendChild(arrow);
+          } else if (s.name) {
+            marker = addLabel(s, args.width);
+          }
+
+          const rectEl = el("rect", { class: "spot", x: s.x, y: s.y, width: s.w, height: s.h });
+          if (marker) {
+            rectEl.addEventListener("mouseenter", () => marker.classList.add("hot"));
+            rectEl.addEventListener("mouseleave", () => marker.classList.remove("hot"));
+          }
+          rectEl.addEventListener("click", e => {
+            e.stopPropagation();
+            if (group.length === 1) report(s.id);
+            else showMenu(e, group);
+          });
+          spots.push(rectEl);
+        });
+        // Clickable areas go on top of the labels
+        spots.forEach(rectEl => overlay.appendChild(rectEl));
+      }
+
+      function render(args) {
+        const sceneKey = JSON.stringify([args.svg, args.hotspots]);
+        if (sceneKey !== lastScene) {
+          lastScene = sceneKey;
+          drawScene(args);
+        }
+        const message = args.message;
+        if (!message) {
+          stopTyping();
+          dialog.style.display = "none";
+          shownMessageId = null;
+        } else if (message.id !== shownMessageId) {
+          shownMessageId = message.id;
+          showMessage(message);
+        }
+        requestAnimationFrame(updateHeight);
+      }
+
+      window.addEventListener("message", event => {
+        if (event.data && event.data.type === "streamlit:render") {
+          render(event.data.args);
+        }
+      });
+      window.addEventListener("resize", updateHeight);
+      send("streamlit:componentReady", { apiVersion: 1 });
+    </script>
+  </body>
+</html>

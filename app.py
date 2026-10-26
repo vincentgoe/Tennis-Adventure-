@@ -8,12 +8,20 @@ story.json.
 from pathlib import Path
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 import logic
 from db import DEFAULT_DB_PATH, load_game, save_game
 
 DB_PATH = DEFAULT_DB_PATH
 ASSETS = Path(__file__).parent / "assets"
+IMAGE_W, IMAGE_H = 320, 180  # size of every scene image, in SVG units
+PLAYER_W, PLAYER_H = 22, 42  # size of assets/sprites/player.svg at scale 1
+
+# Small custom component: shows the scene SVG with clickable hotspots
+scene_view = components.declare_component(
+    "scene_view", path=str(Path(__file__).parent / "components" / "scene_view")
+)
 
 # Fallback icons when an action in story.json has no "icon"
 DEFAULT_ICONS = {
@@ -39,6 +47,28 @@ def show_image(image, width="stretch"):
         st.image(str(ASSETS / image), width=width)
 
 
+@st.cache_data
+def read_asset(path):
+    return (ASSETS / path).read_text(encoding="utf-8")
+
+
+def scene_svg_with_player(state):
+    """The scene image as SVG text, with the player figure drawn into it."""
+    svg = read_asset(logic.scene_image(state, story)).strip()
+    player = story["scenes"][state.scene].get("player")
+    if player is None:
+        return svg
+    scale = player["scale"]
+    sprite = read_asset("sprites/player.svg").strip().replace(
+        "<svg ",
+        f'<svg x="{player["x"]}" y="{player["y"]}" '
+        f'width="{PLAYER_W * scale}" height="{PLAYER_H * scale}" ',
+        1,
+    )
+    head, _, _ = svg.rpartition("</svg>")
+    return head + sprite + "</svg>"
+
+
 def action_icon(action):
     if "icon" in action:
         return action["icon"]
@@ -53,18 +83,32 @@ def action_icon(action):
 if "state" not in st.session_state:
     saved = load_game(DB_PATH)
     st.session_state.state = saved if saved is not None else logic.new_game(story)
-    st.session_state.feedback = None  # (accepted, message) of the last action
+    st.session_state.feedback = None  # message of the last action, see below
+    st.session_state.message_count = 0
 
 
 def handle_action(action_id):
     """Check the action with logic.py and save only if it was accepted."""
-    new_state, accepted, message = logic.apply_action(
-        st.session_state.state, action_id, story
-    )
+    before = st.session_state.state
+    speaker = logic.speaker_for(before, action_id, story)
+    new_state, accepted, message = logic.apply_action(before, action_id, story)
     if accepted:
         save_game(DB_PATH, new_state)
         st.session_state.state = new_state
-    st.session_state.feedback = (accepted, message)
+    # Every action gets a new id, so the dialogue box knows it is a new message
+    st.session_state.message_count += 1
+    st.session_state.feedback = {
+        "id": st.session_state.message_count,
+        "text": message,
+        "speaker": speaker,
+    }
+
+
+def handle_click():
+    """A hotspot in the scene image was clicked: same path as a button."""
+    clicked = st.session_state.get("scene_view")
+    if clicked and "action" in clicked:
+        handle_action(clicked["action"])
 
 
 state = st.session_state.state
@@ -92,8 +136,8 @@ st.title(f"🎾 {story['title']}")
 
 if state.ending is not None:
     ending = story["endings"][state.ending]
-    if st.session_state.feedback and st.session_state.feedback[1]:
-        st.markdown(st.session_state.feedback[1])
+    if st.session_state.feedback and st.session_state.feedback["text"]:
+        st.markdown(st.session_state.feedback["text"])
     for page in ending["pages"]:
         st.subheader(page["name"])
         show_image(page.get("image"))
@@ -103,26 +147,32 @@ if state.ending is not None:
 
 scene = story["scenes"][state.scene]
 st.header(scene["name"])
-show_image(logic.scene_image(state, story))
+
+# The last message is shown in the dialogue box inside the scene image
+feedback = st.session_state.feedback
+message = feedback if feedback and feedback["text"] else None
+
+scene_view(
+    svg=scene_svg_with_player(state),
+    hotspots=logic.scene_hotspots(state, story),
+    message=message,
+    width=IMAGE_W,
+    height=IMAGE_H,
+    key="scene_view",
+    on_change=handle_click,
+    default=None,
+)
+st.caption("Click on things in the picture. Arrows lead back.")
 st.markdown(logic.scene_text(state, story))
 
-if st.session_state.feedback is not None:
-    accepted, message = st.session_state.feedback
-    if message:
-        if accepted:
-            st.info(message, icon=":material/chat_bubble:")
-        else:
-            st.warning(message, icon=":material/block:")
-
-st.divider()
-
-for action_id in logic.available_actions(state, story):
-    action = logic.find_action(story, state.scene, action_id)
-    st.button(
-        action["label"],
-        key=action_id,
-        icon=action_icon(action),
-        on_click=handle_action,
-        args=(action_id,),
-        width="stretch",
-    )
+with st.expander("All actions", icon=":material/list:"):
+    for action_id in logic.available_actions(state, story):
+        action = logic.find_action(story, state.scene, action_id)
+        st.button(
+            action["label"],
+            key=action_id,
+            icon=action_icon(action),
+            on_click=handle_action,
+            args=(action_id,),
+            width="stretch",
+        )

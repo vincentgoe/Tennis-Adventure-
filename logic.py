@@ -144,6 +144,49 @@ def available_actions(state, story):
     return visible
 
 
+def scene_hotspots(state, story):
+    """Clickable areas of the current scene image: one per visible action, in
+    the same order as available_actions. Hidden actions are not clickable."""
+    hotspots = []
+    for action_id in available_actions(state, story):
+        action = find_action(story, state.scene, action_id)
+        spot = action.get("hotspot")
+        if spot is None:
+            continue
+        hotspots.append(
+            {
+                "id": action_id,
+                "label": action["label"],
+                "x": spot["x"],
+                "y": spot["y"],
+                "w": spot["w"],
+                "h": spot["h"],
+                "marker": spot.get("marker"),
+                "name": spot.get("name"),
+                "label_at": spot.get("label_at"),
+            }
+        )
+    return hotspots
+
+
+def speaker_for(state, action_id, story):
+    """Who speaks the message this action would produce in this state.
+
+    The action's own speaker if it is allowed, otherwise the speaker of the
+    matching blocked text. None for objects, narration and unknown actions.
+    Call it with the state from *before* the action.
+    """
+    if state.ending is not None:
+        return None
+    action = find_action(story, state.scene, action_id)
+    if action is None:
+        return None
+    if conditions_met(state, action.get("requires", {}), story):
+        return action.get("speaker")
+    entry = first_matching_entry(action.get("blocked_text", []), state, story)
+    return entry.get("speaker") if entry is not None else None
+
+
 def apply_action(state, action_id, story):
     """Try an action. Returns (new_state, accepted, message).
 
