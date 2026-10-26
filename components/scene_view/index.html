@@ -24,8 +24,9 @@
       .spot { fill: transparent; stroke: none; cursor: pointer; }
       .label rect { fill: rgba(45, 58, 42, 0.82); transition: fill 0.12s; }
       .label text { fill: #ffffff; font: bold 7px monospace; }
-      .label { pointer-events: none; transition: opacity 0.2s; }
-      .label.hot rect { fill: #d9743a; }
+      /* Names appear only while hovering (author feedback) */
+      .label { pointer-events: none; opacity: 0; transition: opacity 0.15s; }
+      .label.hot { opacity: 1; }
       .busy .label, .busy .exit-badge, .busy .exit-arrow,
       .talking .label, .talking .exit-badge, .talking .exit-arrow { opacity: 0; }
 

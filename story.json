@@ -86,7 +86,11 @@
                 ]
               },
               "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
-              "speaker": "Steward"
+              "speaker": "Steward",
+              "speaker_at": [
+                161,
+                63
+              ]
             },
             {
               "text": "The locker room is closed. The tournament has already started."
@@ -121,7 +125,11 @@
                 ]
               },
               "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
-              "speaker": "Steward"
+              "speaker": "Steward",
+              "speaker_at": [
+                161,
+                63
+              ]
             },
             {
               "text": "You're still in your street clothes. Get changed in the locker room first."
@@ -160,7 +168,11 @@
                 ]
               },
               "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
-              "speaker": "Steward"
+              "speaker": "Steward",
+              "speaker_at": [
+                161,
+                63
+              ]
             },
             {
               "text": "Not now. Get changed first, your first match starts soon."
@@ -383,6 +395,16 @@
       "texts": [
         {
           "when": {
+            "match_due": true,
+            "flags": [
+              "knows_groundskeeper"
+            ]
+          },
+          "text": "The umpire waves you over to the net. Your next match is ready.",
+          "image": "scenes/court_match_groundskeeper.svg"
+        },
+        {
+          "when": {
             "match_due": true
           },
           "text": "The umpire waves you over to the net. Your next match is ready.",
@@ -427,12 +449,39 @@
           "requires": {
             "flags": [
               "knows_groundskeeper"
-            ]
+            ],
+            "no_choice": "racket"
           },
           "effects": {
             "move_to": "groundskeeper"
           },
           "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 0,
+            "y": 108,
+            "w": 50,
+            "h": 60,
+            "name": "Groundskeeper"
+          }
+        },
+        {
+          "id": "talk_groundskeeper_courtside",
+          "label": "Talk to the groundskeeper",
+          "speaker": "Groundskeeper",
+          "speaker_at": [
+            13,
+            116
+          ],
+          "requires": {
+            "flags": [
+              "knows_groundskeeper"
+            ],
+            "choice_made": "racket"
+          },
+          "effects": {
+            "show_text": "\"So, did you find a racket?\""
+          },
+          "icon": ":material/chat:",
           "hotspot": {
             "x": 0,
             "y": 108,
