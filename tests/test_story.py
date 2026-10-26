@@ -28,6 +28,36 @@ def test_every_scene_text_item_and_ending_page_has_an_image():
     assert missing == []
 
 
+IMAGE_W, IMAGE_H = 320, 180
+
+
+def _inside_image(x, y, w=0, h=0):
+    return 0 <= x and 0 <= y and x + w <= IMAGE_W and y + h <= IMAGE_H
+
+
+def test_every_action_has_a_hotspot_inside_the_image():
+    """specs/point-and-click.md: every action can be clicked in the image."""
+    story = load_story()
+    problems = []
+    for scene_id, scene in story["scenes"].items():
+        for action in scene["actions"]:
+            spot = action.get("hotspot")
+            if spot is None or not _inside_image(spot["x"], spot["y"], spot["w"], spot["h"]):
+                problems.append(f"{scene_id}.{action['id']}")
+    assert problems == []
+
+
+def test_every_scene_has_a_player_position_inside_the_image():
+    """specs/point-and-click.md: the player stands in every scene."""
+    story = load_story()
+    problems = []
+    for scene_id, scene in story["scenes"].items():
+        player = scene.get("player")
+        if player is None or not _inside_image(player["x"], player["y"]):
+            problems.append(scene_id)
+    assert problems == []
+
+
 def test_every_referenced_image_exists():
     story = load_story()
     images = [image for image in _referenced_images(story) if image is not None]
