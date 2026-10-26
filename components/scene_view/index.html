@@ -60,34 +60,41 @@
       /* While a conversation runs, a click anywhere moves it on */
       #catcher { position: absolute; inset: 0; z-index: 2; display: none; cursor: pointer; }
 
+      /* Game-style text: a local pixel font if installed, otherwise bold monospace */
+      @font-face { font-family: "GameFont"; src: url("PressStart2P-Regular.ttf"); }
+      .game-text { font-family: "GameFont", "Courier New", monospace; font-weight: bold;
+                   letter-spacing: 0.3px; }
+
       /* Text box at the bottom of the image (narration, objects) */
       #dialog { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 3;
                 display: none; cursor: pointer;
-                background: rgba(251, 247, 238, 0.97); color: #2d3a2a;
-                border: 3px solid #2d3a2a; border-radius: 6px;
-                box-shadow: 0 3px 0 rgba(45, 58, 42, 0.35);
-                padding: 14px 16px 12px; font: 15px/1.45 sans-serif; }
-      #speaker { position: absolute; top: -13px; left: 12px; display: none;
-                 background: #d9743a; color: #ffffff; border: 2px solid #2d3a2a;
-                 border-radius: 4px; padding: 1px 8px; font: bold 12px monospace; }
+                background: rgba(12, 12, 12, 0.94); color: #ffffff;
+                border: 3px solid #fbf7ee; border-radius: 4px;
+                box-shadow: 0 0 0 3px #111111;
+                padding: 14px 16px 12px; font-size: 14px; line-height: 1.6; }
+      #speaker { position: absolute; top: -14px; left: 12px; display: none;
+                 background: #d9743a; color: #ffffff; border: 2px solid #fbf7ee;
+                 border-radius: 3px; padding: 1px 8px; font-size: 11px; }
 
       /* Speech bubble above the speaker */
       #bubble { position: absolute; z-index: 3; display: none; cursor: pointer;
                 max-width: 58%; transform: translate(-50%, -100%);
-                background: #ffffff; color: #2d3a2a; border: 3px solid #2d3a2a;
-                border-radius: 12px; padding: 8px 12px 14px;
-                font: 15px/1.4 sans-serif; box-shadow: 0 3px 0 rgba(45, 58, 42, 0.3); }
+                background: #111111; color: #ffffff; border: 3px solid #fbf7ee;
+                border-radius: 8px; padding: 8px 12px 14px;
+                font-size: 14px; line-height: 1.5; box-shadow: 0 0 0 2px #111111; }
       #bubble::after, #bubble::before { content: ""; position: absolute; left: var(--tail, 50%);
                 transform: translateX(-50%); border-style: solid; }
       #bubble::before { bottom: -15px; border-width: 13px 9px 0 9px;
-                border-color: #2d3a2a transparent transparent transparent; }
+                border-color: #fbf7ee transparent transparent transparent; }
       #bubble::after { bottom: -10px; border-width: 10px 6px 0 6px;
-                border-color: #ffffff transparent transparent transparent; }
-      #bubble-name { font: bold 11px monospace; color: #d9743a; margin-bottom: 2px; }
+                border-color: #111111 transparent transparent transparent; }
+      #bubble-name { font-size: 11px; color: #f0a46e; margin-bottom: 3px; }
 
       .more { position: absolute; right: 10px; bottom: 3px; font: bold 11px monospace;
               color: #d9743a; animation: blink 0.9s steps(2, start) infinite; display: none; }
       @keyframes blink { to { visibility: hidden; } }
+      .walking #player .hop { animation: hop 0.28s ease-in-out infinite; }
+      @keyframes hop { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-2px); } }
     </style>
   </head>
   <body>
@@ -97,8 +104,8 @@
       <div id="menu"></div>
       <div id="reveal"><div id="rays"></div><div id="item"><div class="spinner"></div></div></div>
       <div id="catcher"></div>
-      <div id="dialog"><div id="speaker"></div><div id="dialog-text"></div><div class="more">▼</div></div>
-      <div id="bubble"><div id="bubble-name"></div><div id="bubble-text"></div><div class="more">▼</div></div>
+      <div id="dialog" class="game-text"><div id="speaker"></div><div id="dialog-text"></div><div class="more">▼</div></div>
+      <div id="bubble" class="game-text"><div id="bubble-name"></div><div id="bubble-text"></div><div class="more">▼</div></div>
     </div>
 
     <script>
@@ -119,10 +126,10 @@
         window.parent.postMessage(
           Object.assign({ isStreamlitMessage: true, type: type }, data), "*");
       }
-      function report(actionId) {
+      function report(actionId, player) {
         hideMenu();
         send("streamlit:setComponentValue", {
-          value: { action: actionId, nonce: Date.now() + Math.random() },
+          value: { action: actionId, nonce: Date.now() + Math.random(), player: player || null },
           dataType: "json",
         });
       }
@@ -158,23 +165,47 @@
       // --- Animations before an action -----------------------------------------
       const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+      // Where the player walks to for this spot: its walk_to (only if the
+      // action is allowed); otherwise next to the spot, on the side the player
+      // comes from, on the same ground line. In front of something wide (e.g.
+      // the lockers) the player already is "there" and stays.
+      function walkTarget(spot) {
+        const p = args.player;
+        if (spot.allowed && spot.walk_to) return { x: spot.walk_to[0], y: spot.walk_to[1] };
+        const width = 22 * p.scale;
+        const center = p.x + width / 2;
+        const inside = center >= spot.x && center <= spot.x + spot.w;
+        if (inside && spot.w >= 2 * width) return { x: p.x, y: p.y };
+        const fromRight = center > spot.x + spot.w / 2;
+        let x = fromRight ? spot.x + spot.w + 1 : spot.x - width - 1;
+        x = Math.min(Math.max(x, 0), args.width - width);
+        return { x: x, y: p.y };
+      }
+
       async function activate(spot) {
         if (busy) return;
         hideMenu();
-        // Only allowed actions animate; blocked ones just show their message
-        if (spot.allowed && (spot.walk_to || spot.drop)) {
-          busy = true;
-          wrap.classList.add("busy");
-          endConversation();
-          const player = scene.querySelector("#player");
-          if (spot.walk_to && player && args.player) {
-            const dx = spot.walk_to[0] - args.player.x;
-            const dy = spot.walk_to[1] - args.player.y;
-            player.style.transition = "transform 0.8s ease-in-out";
+        const player = scene.querySelector("#player");
+        let reached = null;
+        busy = true;
+        wrap.classList.add("busy");
+        endConversation();
+        if (player && args.player) {
+          reached = walkTarget(spot);
+          const dx = reached.x - args.player.x, dy = reached.y - args.player.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance > 3) {
+            const seconds = Math.min(Math.max(distance / 140, 0.3), 1.3);
+            wrap.classList.add("walking");
+            player.style.transition = `transform ${seconds}s linear`;
             player.style.transform = `translate(${dx}px, ${dy}px)`;
-            await wait(900);
+            await wait(seconds * 1000 + 80);
+            wrap.classList.remove("walking");
           }
-          const target = spot.drop && scene.querySelector("#" + CSS.escape(spot.drop));
+        }
+        // Only allowed actions play their extra animation (e.g. the falling lock)
+        if (spot.allowed && spot.drop) {
+          const target = scene.querySelector("#" + CSS.escape(spot.drop));
           if (target) {
             target.style.transformBox = "fill-box";
             target.style.transformOrigin = "center";
@@ -183,9 +214,10 @@
             target.style.opacity = "0";
             await wait(750);
           }
-          busy = false;   // the new scene from Python resets everything
         }
-        report(spot.id);
+        busy = false;
+        wrap.classList.remove("busy");
+        report(spot.id, reached);
       }
 
       // --- Typing text ---------------------------------------------------------

@@ -67,14 +67,25 @@ def read_asset(path):
     return (ASSETS / path).read_text(encoding="utf-8")
 
 
+def player_position(state):
+    """Where the player stands in the current scene: where they last walked to
+    in this scene (kept for this session only), otherwise the scene's default."""
+    default = story["scenes"][state.scene].get("player")
+    walked = st.session_state.get("player_pos")
+    if default and walked and walked["scene"] == state.scene:
+        return {"x": walked["x"], "y": walked["y"], "scale": default["scale"]}
+    return default
+
+
 def scene_svg_with_player(state):
     """The scene image as SVG text, with the player figure drawn into it.
 
     The figure's outfit depends on the state (street clothes or tennis kit).
-    It is wrapped in <g id="player"> so the component can let it walk.
+    It is wrapped in <g id="player"><g class="hop"> so the component can let
+    it walk and hop.
     """
     svg = read_asset(logic.scene_image(state, story)).strip()
-    player = story["scenes"][state.scene].get("player")
+    player = player_position(state)
     sprite_path = logic.player_image(state, story)
     if player is None or sprite_path is None:
         return svg
@@ -86,7 +97,7 @@ def scene_svg_with_player(state):
         1,
     )
     head, _, _ = svg.rpartition("</svg>")
-    return head + '<g id="player">' + sprite + "</g></svg>"
+    return head + '<g id="player"><g class="hop">' + sprite + "</g></g></svg>"
 
 
 def action_icon(action):
@@ -146,6 +157,7 @@ def confirm_new_game():
     st.session_state.feedback = None
     st.session_state.confirm_new_game = False
     st.session_state.ending_page = 0
+    st.session_state.player_pos = None
 
 
 def next_ending_page():
@@ -156,6 +168,11 @@ def handle_click():
     """A hotspot in the scene image was clicked: same path as a button."""
     clicked = st.session_state.get("scene_view")
     if clicked and "action" in clicked:
+        walked = clicked.get("player")
+        if walked:
+            # Remember where the player walked to in this scene
+            st.session_state.player_pos = {
+                "scene": st.session_state.state.scene, "x": walked["x"], "y": walked["y"]}
         handle_action(clicked["action"])
 
 
@@ -222,7 +239,7 @@ with main_col:
     scene_view(
         svg=scene_svg_with_player(state),
         hotspots=logic.scene_hotspots(state, story),
-        player=scene.get("player"),  # start position, for the walk animation
+        player=player_position(state),  # where the player stands now, for walking
         message=message,
         width=IMAGE_W,
         height=IMAGE_H,

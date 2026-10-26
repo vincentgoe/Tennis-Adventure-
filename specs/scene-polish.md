@@ -114,6 +114,21 @@ conversations.
   player has realistic size in the locker room; the net on the shed wall is
   replaced by a drag mat and a court broom for smoothing the clay court.
 
+### Fourth round of author feedback
+
+- **Walking on every click:** the player first walks to the clicked spot (or to
+  the hotspot's `walk_to`), then the action happens. Walking is horizontal at
+  the player's ground line; the figure hops a little while walking. If the
+  scene stays the same after the action, the player stays where they walked to
+  (kept in the session only, not saved; a new scene starts at its default
+  position).
+- **Text boxes and speech bubbles:** black background, white text, game-style
+  font.
+- **Stranger end scene:** the racket has a realistic size and is held by the
+  grip. After the stranger asks, the player walks a few steps towards him and
+  hands it over; the stranger turns it in his hands for several seconds before
+  he speaks again, then hands it back and disappears, then "THE END".
+
 ## Out of scope
 
 - An opponent and a ball during matches: that is the minigame (stage 2).
