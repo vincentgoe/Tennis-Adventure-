@@ -139,10 +139,10 @@ name from `story.json`.
 
 ## Done when
 
-- [ ] Tests for cases 1–6 exist, were reviewed, and are green with `uv run pytest`.
-- [ ] Rule tests use a small test story and do not depend on `story.json`.
-- [ ] Persistence tests use a temporary database (`tmp_path`).
-- [ ] Manual check: start the app, play from the start to the racket choice,
+- [x] Tests for cases 1–6 exist, were reviewed, and are green with `uv run pytest`.
+- [x] Rule tests use a small test story and do not depend on `story.json`.
+- [x] Persistence tests use a temporary database (`tmp_path`).
+- [x] Manual check: start the app, play from the start to the racket choice,
       stop the app (Ctrl+C), start it again, and see the same state and routes.
 - [ ] Committed on `first-feature`, pushed, reviewed, merged into `main`.
 
