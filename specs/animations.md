@@ -39,4 +39,4 @@ tournament feel alive, in the spirit of block-style games like Crossy Road.
 - [x] All existing tests are still green and unchanged.
 - [x] Manual check: people bob and blink, clouds drift, trees sway, and nothing
       jitters or looks distracting.
-- [ ] Committed on `animations`, pushed, reviewed, merged into `main`.
+- [x] Committed on `animations`, pushed, reviewed, merged into `main`.

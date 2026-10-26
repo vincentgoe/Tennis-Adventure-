@@ -151,4 +151,4 @@ conversations.
 - [x] Manual check: outfit changes in the locker room, speech bubbles above the
       woman and the groundskeeper, the unlock animation, the sleeping and awake
       umpire, and the new details in each scene.
-- [ ] Committed on `scene-polish`, pushed, reviewed, merged into `main`.
+- [x] Committed on `scene-polish`, pushed, reviewed, merged into `main`.

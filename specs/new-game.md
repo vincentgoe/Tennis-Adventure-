@@ -36,4 +36,4 @@ Until now, the only way to start over was to delete `plot_twist.db`.
 - [x] Manual check: "New game" → "Cancel" keeps the game; "New game" →
       "Yes, start over" shows the grounds with an empty inventory; restarting
       the app after that also shows the grounds.
-- [ ] Committed on `new-game`, pushed, reviewed, merged into `main`.
+- [x] Committed on `new-game`, pushed, reviewed, merged into `main`.
