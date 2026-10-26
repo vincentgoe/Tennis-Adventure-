@@ -104,6 +104,24 @@ def handle_action(action_id):
     }
 
 
+def ask_new_game():
+    st.session_state.confirm_new_game = True
+
+
+def cancel_new_game():
+    """A6: cancelling keeps the game as it is. Nothing is saved."""
+    st.session_state.confirm_new_game = False
+
+
+def confirm_new_game():
+    """A6: replace the saved game with a new one."""
+    fresh = logic.new_game(story)
+    save_game(DB_PATH, fresh)
+    st.session_state.state = fresh
+    st.session_state.feedback = None
+    st.session_state.confirm_new_game = False
+
+
 def handle_click():
     """A hotspot in the scene image was clicked: same path as a button."""
     clicked = st.session_state.get("scene_view")
@@ -128,6 +146,16 @@ with st.sidebar:
                 st.markdown(f"**{item['name']}**")
     else:
         st.caption("Empty")
+
+    st.divider()
+    ui = story["ui_texts"]
+    if st.session_state.get("confirm_new_game"):
+        st.warning(ui["new_game_confirm"], icon=":material/help:")
+        yes_col, cancel_col = st.columns(2)
+        yes_col.button(ui["new_game_yes"], type="primary", on_click=confirm_new_game, width="stretch")
+        cancel_col.button(ui["new_game_cancel"], on_click=cancel_new_game, width="stretch")
+    else:
+        st.button("New game", icon=":material/restart_alt:", on_click=ask_new_game, width="stretch")
 
 
 # --- Main screen ------------------------------------------------------------
