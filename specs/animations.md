@@ -15,6 +15,13 @@ tournament feel alive, in the spirit of block-style games like Crossy Road.
 - **Clouds** drift slowly, **trees** sway slightly. The existing animations
   stay: flags, the match indicator, dust in the shed, trophy and confetti.
 - In the award ceremonies, the **crowd** bobs as well.
+- Author feedback: everything except the people moves **faster**, so the
+  scenes feel more dynamic. People keep their calm rhythm.
+- More **life and detail** everywhere: grass tufts and a few swaying flowers
+  on green areas, distant birds in the sky, a bouncing ball on the grounds'
+  court, butterflies, a wall clock and a swaying plant in the office, a
+  dripping pipe in the locker room, a swinging padlock on the shed, a spider in
+  the shed, camera flashes at the ceremonies, a glowing sunset.
 - Animations are part of the SVG files in `assets/` (SVG `<animate>`), so they
   need no JavaScript and also work in the plain image views (endings).
 - Animations are subtle: at most a few units of movement in a 320 × 180 image.
