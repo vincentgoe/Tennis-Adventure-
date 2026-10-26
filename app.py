@@ -1,8 +1,11 @@
 """Streamlit screens for Plot Twist.
 
 This file only renders the state and collects clicks. Rules live in logic.py,
-saving and loading in db.py.
+saving and loading in db.py. Images live in assets/ and are referenced from
+story.json.
 """
+
+from pathlib import Path
 
 import streamlit as st
 
@@ -10,6 +13,16 @@ import logic
 from db import DEFAULT_DB_PATH, load_game, save_game
 
 DB_PATH = DEFAULT_DB_PATH
+ASSETS = Path(__file__).parent / "assets"
+
+# Fallback icons when an action in story.json has no "icon"
+DEFAULT_ICONS = {
+    "move_to": ":material/directions_walk:",
+    "play_match": ":material/sports_tennis:",
+    "add_item": ":material/back_hand:",
+}
+
+st.set_page_config(page_title="Plot Twist", page_icon="🎾", layout="centered")
 
 
 @st.cache_data
@@ -18,6 +31,21 @@ def get_story():
 
 
 story = get_story()
+
+
+def show_image(image, width="stretch"):
+    """Show an image from assets/ (path as written in story.json)."""
+    if image:
+        st.image(str(ASSETS / image), width=width)
+
+
+def action_icon(action):
+    if "icon" in action:
+        return action["icon"]
+    for effect, icon in DEFAULT_ICONS.items():
+        if effect in action.get("effects", {}):
+            return icon
+    return ":material/chat:"
 
 
 # --- Session start: resume a saved game, or start a new one -----------------
@@ -48,14 +76,19 @@ with st.sidebar:
     st.header("Inventory")
     if state.items:
         for item_id in state.items:
-            st.markdown(f"- {story['items'][item_id]['name']}")
+            item = story["items"][item_id]
+            icon_col, name_col = st.columns([1, 3], vertical_alignment="center")
+            with icon_col:
+                show_image(item.get("image"), width=48)
+            with name_col:
+                st.markdown(f"**{item['name']}**")
     else:
         st.caption("Empty")
 
 
 # --- Main screen ------------------------------------------------------------
 
-st.title(story["title"])
+st.title(f"🎾 {story['title']}")
 
 if state.ending is not None:
     ending = story["endings"][state.ending]
@@ -63,21 +96,23 @@ if state.ending is not None:
         st.markdown(st.session_state.feedback[1])
     for page in ending["pages"]:
         st.subheader(page["name"])
+        show_image(page.get("image"))
         st.markdown(page["text"])
-    st.success(ending["title"])
+    st.success(ending["title"], icon=":material/emoji_events:")
     st.stop()
 
 scene = story["scenes"][state.scene]
 st.header(scene["name"])
+show_image(logic.scene_image(state, story))
 st.markdown(logic.scene_text(state, story))
 
 if st.session_state.feedback is not None:
     accepted, message = st.session_state.feedback
     if message:
         if accepted:
-            st.info(message)
+            st.info(message, icon=":material/chat_bubble:")
         else:
-            st.warning(message)
+            st.warning(message, icon=":material/block:")
 
 st.divider()
 
@@ -86,6 +121,7 @@ for action_id in logic.available_actions(state, story):
     st.button(
         action["label"],
         key=action_id,
+        icon=action_icon(action),
         on_click=handle_action,
         args=(action_id,),
         width="stretch",

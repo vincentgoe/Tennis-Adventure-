@@ -1,0 +1,19 @@
+# Tennis theme for Plot Twist (specs/visuals.md)
+
+[theme]
+base = "light"
+primaryColor = "#d9743a"            # clay orange
+backgroundColor = "#fbf7ee"         # warm off-white, like court lines
+secondaryBackgroundColor = "#e3efd9" # light grass green
+textColor = "#2d3a2a"
+greenColor = "#5ea83f"
+orangeColor = "#d9743a"
+font = "sans-serif"
+headingFont = "monospace"           # blocky headings to match the images
+headingFontWeights = [800, 700]
+baseRadius = "0.25rem"
+buttonRadius = "0.25rem"
+showSidebarBorder = true
+
+[theme.sidebar]
+backgroundColor = "#e3efd9"
