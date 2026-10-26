@@ -153,3 +153,35 @@ def test_groundskeeper_is_a_courtside_talk_after_the_racket_choice():
     assert new_state == state
     assert message
     assert speaker_for(state, "talk_groundskeeper_courtside", story) == "Groundskeeper"
+
+
+def test_the_shed_stays_open_after_unlocking():
+    """specs/scene-polish.md: leaving the shed and coming back does not ask to
+    unlock it again."""
+    from logic import apply_action, available_actions
+    story = load_story()
+    state = _at_court_after_round_two(scene="shed")
+
+    state, accepted, _ = apply_action(state, "open_shed", story)
+    assert accepted is True and state.scene == "shed_inside"
+    state, _, _ = apply_action(state, "leave_shed_inside", story)
+    state, _, _ = apply_action(state, "go_shed", story)
+
+    actions = available_actions(state, story)
+    assert "open_shed" not in actions
+    assert "enter_shed" in actions
+    state, accepted, _ = apply_action(state, "enter_shed", story)
+    assert accepted is True and state.scene == "shed_inside"
+
+
+def test_every_inspect_action_has_an_existing_closeup():
+    """specs/scene-polish.md: inspecting a racket shows a close-up."""
+    story = load_story()
+    problems = []
+    for scene in story["scenes"].values():
+        for action in scene["actions"]:
+            if action["id"].startswith("inspect_"):
+                image = action.get("closeup")
+                if image is None or not (ASSETS / image).is_file():
+                    problems.append(action["id"])
+    assert problems == []

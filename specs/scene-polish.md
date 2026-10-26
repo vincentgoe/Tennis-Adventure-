@@ -85,6 +85,35 @@ conversations.
   it, says "You made a good choice, kid." in a second bubble, hands it back and
   disappears. The animation plays once, inside the ending image.
 
+### Third round of author feedback
+
+- **The shed stays open (bug fix):** the first time the shed is unlocked, the
+  flag `shed_unlocked` is set. After that, the shed image shows the open door
+  and the padlock on the ground, and clicking the door goes straight inside
+  without the unlock animation.
+  - New story key `hide_when` (a condition block like `requires`): an action is
+    hidden and rejected while its `hide_when` holds, even if it has a
+    `blocked_text`. `open_shed` is hidden once the shed is unlocked, and a new
+    action `enter_shed` (requires `shed_unlocked`) leads inside.
+- **Racket close-up:** inspecting a racket shows a close-up "item reveal": the
+  scene darkens, light rays turn, the racket spins slowly in the middle, and
+  the inspection text appears below. A click closes it. On the old Yonex, the
+  faded letters "Roger F." are visible on the frame.
+  - Story key `closeup` on an action (an image in `assets/`). New pure
+    function `logic.closeup_for(state, action_id, story)`: the close-up image
+    if the action is allowed, otherwise `None`.
+- **Ending as end scenes:** ending pages are shown one at a time with a
+  "Continue" button, so the stranger's animation starts only when his page is
+  shown. The stranger walks up, talks in bubbles, hands the racket back and
+  disappears, then "THE END" fades in. The last page shows the ending title.
+- **Layout:** the game uses the full width of the window, the Streamlit
+  toolbar is hidden, and the inventory is a small list in the top right corner
+  (with the "New game" button) instead of the sidebar.
+- **Art:** smaller, realistic podium with places 2, 1 and 3 side by side; the
+  rally players hold their rackets by the grip, head away from the body; the
+  player has realistic size in the locker room; the net on the shed wall is
+  replaced by a drag mat and a court broom for smoothing the clay court.
+
 ## Out of scope
 
 - An opponent and a ball during matches: that is the minigame (stage 2).
