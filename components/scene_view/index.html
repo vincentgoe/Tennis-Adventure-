@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <!--
+      Scene view for Plot Twist (specs/point-and-click.md).
+
+      Shows the scene SVG and puts clickable hotspots on top. When a hotspot
+      is clicked, it reports {action, nonce} back to Python. It knows nothing
+      about the rules: Python decides which hotspots exist and what a click
+      does. Talks to Streamlit with its plain postMessage protocol, so no
+      build step or extra package is needed.
+    -->
+    <style>
+      html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+      #wrap { position: relative; width: 100%; user-select: none; }
+      #scene svg { display: block; width: 100%; height: auto; border-radius: 4px; }
+      #overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+      .spot { fill: transparent; stroke: transparent; stroke-width: 1.2;
+              stroke-dasharray: 3 2; cursor: pointer; }
+      .spot:hover, .spot.open { fill: rgba(255, 255, 255, 0.22); stroke: #ffffff; }
+
+      .dot { fill: #ffffff; stroke: #2d3a2a; stroke-width: 0.6;
+             pointer-events: none; animation: pulse 1.6s ease-in-out infinite; }
+      @keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+      .exit-badge { fill: rgba(45, 58, 42, 0.8); pointer-events: none; }
+      .exit-arrow { fill: #ffffff; font: bold 12px monospace; pointer-events: none; }
+
+      #tip { position: absolute; display: none; pointer-events: none;
+             transform: translate(-50%, -140%); white-space: nowrap;
+             background: rgba(45, 58, 42, 0.92); color: #ffffff;
+             padding: 3px 8px; border-radius: 4px; font: 600 13px monospace; }
+
+      #menu { position: absolute; display: none; min-width: 160px;
+              background: #fbf7ee; border: 2px solid #2d3a2a; border-radius: 4px;
+              padding: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); }
+      #menu button { display: block; width: 100%; margin: 3px 0; padding: 7px 10px;
+                     font: 600 13px monospace; text-align: left; cursor: pointer;
+                     color: #ffffff; background: #d9743a; border: 0; border-radius: 3px; }
+      #menu button:hover { background: #c4642f; }
+    </style>
+  </head>
+  <body>
+    <div id="wrap">
+      <div id="scene"></div>
+      <svg id="overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="tip"></div>
+      <div id="menu"></div>
+    </div>
+
+    <script>
+      const SVG_NS = "http://www.w3.org/2000/svg";
+      const wrap = document.getElementById("wrap");
+      const scene = document.getElementById("scene");
+      const overlay = document.getElementById("overlay");
+      const tip = document.getElementById("tip");
+      const menu = document.getElementById("menu");
+      let lastRender = "";
+
+      // --- Streamlit protocol ------------------------------------------------
+      function send(type, data) {
+        window.parent.postMessage(
+          Object.assign({ isStreamlitMessage: true, type: type }, data), "*");
+      }
+      function report(actionId) {
+        hideMenu();
+        send("streamlit:setComponentValue", {
+          value: { action: actionId, nonce: Date.now() + Math.random() },
+          dataType: "json",
+        });
+      }
+      function updateHeight() {
+        send("streamlit:setFrameHeight", { height: wrap.offsetHeight });
+      }
+
+      // --- Tooltip and menu --------------------------------------------------
+      function pointIn(event) {
+        const box = wrap.getBoundingClientRect();
+        return { x: event.clientX - box.left, y: event.clientY - box.top };
+      }
+      function showTip(event, text) {
+        const p = pointIn(event);
+        tip.textContent = text;
+        tip.style.left = p.x + "px";
+        tip.style.top = p.y + "px";
+        tip.style.display = "block";
+      }
+      function hideTip() { tip.style.display = "none"; }
+      function hideMenu() {
+        menu.style.display = "none";
+        overlay.querySelectorAll(".spot.open").forEach(el => el.classList.remove("open"));
+      }
+      function showMenu(event, group, rectEl) {
+        hideTip();
+        menu.innerHTML = "";
+        group.forEach(spot => {
+          const button = document.createElement("button");
+          button.textContent = spot.label;
+          button.addEventListener("click", e => { e.stopPropagation(); report(spot.id); });
+          menu.appendChild(button);
+        });
+        menu.style.display = "block";
+        rectEl.classList.add("open");
+        // Keep the menu inside the frame
+        const p = pointIn(event);
+        const left = Math.min(Math.max(p.x - menu.offsetWidth / 2, 4),
+                              wrap.offsetWidth - menu.offsetWidth - 4);
+        const top = Math.min(p.y + 8, wrap.offsetHeight - menu.offsetHeight - 4);
+        menu.style.left = left + "px";
+        menu.style.top = Math.max(top, 4) + "px";
+      }
+      wrap.addEventListener("click", hideMenu);
+
+      // --- Drawing -----------------------------------------------------------
+      function el(name, attrs) {
+        const node = document.createElementNS(SVG_NS, name);
+        for (const key in attrs) node.setAttribute(key, attrs[key]);
+        return node;
+      }
+
+      function render(args) {
+        const key = JSON.stringify([args.svg, args.hotspots]);
+        if (key === lastRender) return;
+        lastRender = key;
+        hideMenu();
+        hideTip();
+
+        scene.innerHTML = args.svg;
+        overlay.setAttribute("viewBox", `0 0 ${args.width} ${args.height}`);
+        overlay.innerHTML = "";
+
+        // Actions that share a rectangle open one menu together
+        const groups = new Map();
+        args.hotspots.forEach(spot => {
+          const rectKey = [spot.x, spot.y, spot.w, spot.h].join(",");
+          if (!groups.has(rectKey)) groups.set(rectKey, []);
+          groups.get(rectKey).push(spot);
+        });
+
+        groups.forEach(group => {
+          const s = group[0];
+          const isExit = s.marker === "exit";
+          const label = group.map(g => g.label).join(" / ");
+
+          if (isExit) {
+            const onLeft = s.x + s.w / 2 < args.width / 2;
+            overlay.appendChild(el("rect", {
+              class: "exit-badge", x: s.x, y: s.y + s.h / 2 - 9, width: s.w, height: 18, rx: 3 }));
+            const arrow = el("text", {
+              class: "exit-arrow", x: s.x + s.w / 2, y: s.y + s.h / 2 + 4, "text-anchor": "middle" });
+            arrow.textContent = onLeft ? "◀" : "▶";
+            overlay.appendChild(arrow);
+          } else {
+            overlay.appendChild(el("circle", {
+              class: "dot", cx: s.x + s.w / 2, cy: s.y + Math.min(10, s.h / 2), r: 2.6 }));
+          }
+
+          const rectEl = el("rect", { class: "spot", x: s.x, y: s.y, width: s.w, height: s.h, rx: 3 });
+          rectEl.addEventListener("mousemove", e => {
+            if (menu.style.display !== "block") showTip(e, label);
+          });
+          rectEl.addEventListener("mouseleave", hideTip);
+          rectEl.addEventListener("click", e => {
+            e.stopPropagation();
+            if (group.length === 1) report(s.id);
+            else showMenu(e, group, rectEl);
+          });
+          overlay.appendChild(rectEl);
+        });
+
+        requestAnimationFrame(updateHeight);
+      }
+
+      window.addEventListener("message", event => {
+        if (event.data && event.data.type === "streamlit:render") {
+          render(event.data.args);
+        }
+      });
+      window.addEventListener("resize", updateHeight);
+      send("streamlit:componentReady", { apiVersion: 1 });
+    </script>
+  </body>
+</html>
