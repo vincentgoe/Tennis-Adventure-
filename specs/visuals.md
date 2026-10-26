@@ -60,4 +60,4 @@ first step towards the world map (stage 3).
 - [x] Manual check: play from the start to an ending. Every scene, item and
       ending page shows a fitting image, and the shed and court images change
       with the state.
-- [ ] Committed on `visuals`, pushed, reviewed, merged into `main`.
+- [x] Committed on `visuals`, pushed, reviewed, merged into `main`.
