@@ -907,7 +907,7 @@
       "pages": [
         {
           "name": "Award ceremony",
-          "text": "You stand to the side as the winner lifts the trophy, clapping along with the crowd. So close.",
+          "text": "You stand on the second step as the winner lifts the trophy, clapping along with the crowd. So close.",
           "image": "endings/ceremony_loss.svg"
         }
       ]

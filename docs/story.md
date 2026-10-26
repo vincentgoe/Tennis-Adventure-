@@ -28,7 +28,7 @@ never mentioned.
 | 8   | Equipment shed (corner of the grounds) | Locked until the player has the key. Inside are two rackets. Inspecting is optional. The player takes exactly one. |
 | 9   | Court — rounds 3 and 4 (final)  | The result depends on the chosen racket (see match system). |
 | 10a | Award ceremony — win            | The player receives the trophy, followed by the bonus scene. |
-| 10b | Award ceremony — loss           | The player stands beside the winner and applauds. **Ending B.** |
+| 10b | Award ceremony — loss           | The player stands on the second step of the podium and applauds the winner. **Ending B.** |
 | 11  | Bonus scene (after 10a)         | Text and animation only, no interaction. A mysterious person asks to look at the racket, grins, says *"You made a good choice, kid."* and disappears. It is only hinted that this is Roger F. **Ending A.** |
 
 ## Items
@@ -288,8 +288,8 @@ Final wording, approved by the author. The story data file uses these texts.
   >
   > **ENDING A: The Racket of a Legend**
 - **Loss, Ending B:**
-  > You stand to the side as the winner lifts the trophy, clapping along with the
-  > crowd. So close.
+  > You stand on the second step as the winner lifts the trophy, clapping along
+  > with the crowd. So close.
   >
   > **ENDING B: Runner-up**
 
