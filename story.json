@@ -379,6 +379,7 @@
     "new_game_cancel": "Cancel",
     "replay_match": "Replay match",
     "give_up": "Give up",
-    "give_up_confirm": "Giving up starts a completely new game. All your progress will be lost. Are you sure?"
+    "give_up_confirm": "Giving up starts a completely new game. All your progress will be lost. Are you sure?",
+    "not_available": "You can't do that right now."
   }
 }
