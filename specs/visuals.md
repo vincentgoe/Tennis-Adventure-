@@ -53,11 +53,11 @@ first step towards the world map (stage 3).
 
 ## Done when
 
-- [ ] New tests are written first and are green:
+- [x] New tests are written first and are green:
   - `scene_image` returns the image of the first matching text entry.
   - Every image referenced in `story.json` exists in `assets/`.
-- [ ] All existing tests are still green and unchanged.
-- [ ] Manual check: play from the start to an ending. Every scene, item and
+- [x] All existing tests are still green and unchanged.
+- [x] Manual check: play from the start to an ending. Every scene, item and
       ending page shows a fitting image, and the shed and court images change
       with the state.
 - [ ] Committed on `visuals`, pushed, reviewed, merged into `main`.
