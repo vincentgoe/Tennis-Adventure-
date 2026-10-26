@@ -69,13 +69,19 @@ def conditions_met(state, conditions, story):
     return True
 
 
-def first_matching_text(entries, state, story):
-    """The text of the first entry whose `when` holds. An entry without `when`
-    always matches, so it works as the default."""
+def first_matching_entry(entries, state, story):
+    """The first entry whose `when` holds. An entry without `when` always
+    matches, so it works as the default."""
     for entry in entries:
         if conditions_met(state, entry.get("when", {}), story):
-            return entry["text"]
+            return entry
     return None
+
+
+def first_matching_text(entries, state, story):
+    """The text of the first matching entry."""
+    entry = first_matching_entry(entries, state, story)
+    return entry["text"] if entry is not None else None
 
 
 # --- Matches ----------------------------------------------------------------
@@ -116,6 +122,13 @@ def find_action(story, scene_id, action_id):
 def scene_text(state, story):
     """The description of the current scene, depending on the state (PT R3)."""
     return first_matching_text(story["scenes"][state.scene]["texts"], state, story)
+
+
+def scene_image(state, story):
+    """The image of the current scene. It comes from the same text entry as
+    scene_text, so text and image always match. None if there is no image."""
+    entry = first_matching_entry(story["scenes"][state.scene]["texts"], state, story)
+    return entry.get("image") if entry is not None else None
 
 
 def available_actions(state, story):
