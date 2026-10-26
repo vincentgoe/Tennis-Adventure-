@@ -50,7 +50,8 @@
             "x": 12,
             "y": 40,
             "w": 86,
-            "h": 60
+            "h": 60,
+            "name": "Office"
           }
         },
         {
@@ -71,7 +72,8 @@
                   "registered"
                 ]
               },
-              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\""
+              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
+              "speaker": "Steward"
             },
             {
               "text": "The locker room is closed. The tournament has already started."
@@ -85,7 +87,8 @@
             "x": 170,
             "y": 46,
             "w": 78,
-            "h": 54
+            "h": 54,
+            "name": "Lockers"
           }
         },
         {
@@ -104,7 +107,8 @@
                   "registered"
                 ]
               },
-              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\""
+              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
+              "speaker": "Steward"
             },
             {
               "text": "You're still in your street clothes. Get changed in the locker room first."
@@ -118,7 +122,12 @@
             "x": 110,
             "y": 102,
             "w": 140,
-            "h": 66
+            "h": 66,
+            "name": "Courts",
+            "label_at": [
+              180,
+              114
+            ]
           }
         },
         {
@@ -137,7 +146,8 @@
                   "registered"
                 ]
               },
-              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\""
+              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
+              "speaker": "Steward"
             },
             {
               "text": "Not now. Get changed first, your first match starts soon."
@@ -151,7 +161,8 @@
             "x": 262,
             "y": 58,
             "w": 52,
-            "h": 42
+            "h": 42,
+            "name": "Shed"
           }
         }
       ]
@@ -173,6 +184,7 @@
         {
           "id": "register",
           "label": "Register for the tournament",
+          "speaker": "Woman at the desk",
           "requires": {
             "not_flags": [
               "registered"
@@ -189,12 +201,14 @@
             "x": 96,
             "y": 66,
             "w": 160,
-            "h": 80
+            "h": 80,
+            "name": "Front desk"
           }
         },
         {
           "id": "ask_for_racket",
           "label": "Ask for a spare racket",
+          "speaker": "Woman at the desk",
           "requires": {
             "flags": [
               "needs_racket"
@@ -214,12 +228,14 @@
             "x": 96,
             "y": 66,
             "w": 160,
-            "h": 80
+            "h": 80,
+            "name": "Front desk"
           }
         },
         {
           "id": "talk_office_no_racket",
           "label": "Talk to the woman at the desk",
+          "speaker": "Woman at the desk",
           "requires": {
             "flags": [
               "knows_groundskeeper"
@@ -234,12 +250,14 @@
             "x": 96,
             "y": 66,
             "w": 160,
-            "h": 80
+            "h": 80,
+            "name": "Front desk"
           }
         },
         {
           "id": "talk_office_after_choice",
           "label": "Talk to the woman at the desk",
+          "speaker": "Woman at the desk",
           "requires": {
             "choice_made": "racket"
           },
@@ -251,7 +269,8 @@
             "x": 96,
             "y": 66,
             "w": 160,
-            "h": 80
+            "h": 80,
+            "name": "Front desk"
           }
         },
         {
@@ -304,7 +323,8 @@
             "x": 16,
             "y": 16,
             "w": 292,
-            "h": 104
+            "h": 104,
+            "name": "Lockers"
           }
         },
         {
@@ -368,7 +388,8 @@
             "x": 116,
             "y": 78,
             "w": 88,
-            "h": 44
+            "h": 44,
+            "name": "Net"
           }
         },
         {
@@ -387,7 +408,8 @@
             "x": 0,
             "y": 108,
             "w": 50,
-            "h": 60
+            "h": 60,
+            "name": "Groundskeeper"
           }
         },
         {
@@ -424,6 +446,7 @@
         {
           "id": "talk_groundskeeper_first",
           "label": "Talk to the groundskeeper",
+          "speaker": "Groundskeeper",
           "requires": {
             "not_items": [
               "key"
@@ -438,12 +461,14 @@
             "x": 106,
             "y": 66,
             "w": 56,
-            "h": 98
+            "h": 98,
+            "name": "Groundskeeper"
           }
         },
         {
           "id": "talk_groundskeeper_has_key",
           "label": "Talk to the groundskeeper",
+          "speaker": "Groundskeeper",
           "requires": {
             "items": [
               "key"
@@ -458,12 +483,14 @@
             "x": 106,
             "y": 66,
             "w": 56,
-            "h": 98
+            "h": 98,
+            "name": "Groundskeeper"
           }
         },
         {
           "id": "talk_groundskeeper_after_choice",
           "label": "Talk to the groundskeeper",
+          "speaker": "Groundskeeper",
           "requires": {
             "choice_made": "racket"
           },
@@ -475,7 +502,8 @@
             "x": 106,
             "y": 66,
             "w": 56,
-            "h": 98
+            "h": 98,
+            "name": "Groundskeeper"
           }
         },
         {
@@ -530,7 +558,8 @@
             "x": 134,
             "y": 84,
             "w": 52,
-            "h": 72
+            "h": 72,
+            "name": "Shed door"
           }
         },
         {
@@ -585,7 +614,8 @@
             "x": 86,
             "y": 54,
             "w": 46,
-            "h": 88
+            "h": 88,
+            "name": "Wilson Blade"
           }
         },
         {
@@ -602,7 +632,8 @@
             "x": 136,
             "y": 54,
             "w": 48,
-            "h": 90
+            "h": 90,
+            "name": "Old Yonex"
           }
         },
         {
@@ -623,7 +654,8 @@
             "x": 86,
             "y": 54,
             "w": 46,
-            "h": 88
+            "h": 88,
+            "name": "Wilson Blade"
           }
         },
         {
@@ -644,7 +676,8 @@
             "x": 136,
             "y": 54,
             "w": 48,
-            "h": 90
+            "h": 90,
+            "name": "Old Yonex"
           }
         },
         {
