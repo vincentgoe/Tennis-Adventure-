@@ -111,3 +111,45 @@ def test_every_speaking_action_has_a_bubble_anchor_inside_the_image():
             if anchor is None or not _inside_image(anchor[0], anchor[1]):
                 problems.append(f"{scene_id}.{action['id']}")
     assert problems == []
+
+
+def _at_court_after_round_two(**changes):
+    from logic import GameState
+    state = dict(
+        scene="court",
+        items=["key"],
+        flags={"registered", "changed", "needs_racket", "knows_groundskeeper"},
+        choices={},
+        match_results=["win", "loss"],
+        ending=None,
+    )
+    state.update(changes)
+    return GameState(**state)
+
+
+def test_groundskeeper_scene_is_reachable_before_the_racket_choice():
+    """specs/scene-polish.md: before the choice, he leads to his own scene."""
+    from logic import available_actions
+    story = load_story()
+    actions = available_actions(_at_court_after_round_two(), story)
+
+    assert "go_groundskeeper" in actions
+    assert "talk_groundskeeper_courtside" not in actions
+
+
+def test_groundskeeper_is_a_courtside_talk_after_the_racket_choice():
+    """specs/scene-polish.md: after the choice, he is a side interaction at
+    the court edge, and talking to him does not change the scene."""
+    from logic import apply_action, available_actions, speaker_for
+    story = load_story()
+    state = _at_court_after_round_two(items=["key", "yonex"], choices={"racket": "yonex"})
+
+    actions = available_actions(state, story)
+    assert "go_groundskeeper" not in actions
+    assert "talk_groundskeeper_courtside" in actions
+
+    new_state, accepted, message = apply_action(state, "talk_groundskeeper_courtside", story)
+    assert accepted is True
+    assert new_state == state
+    assert message
+    assert speaker_for(state, "talk_groundskeeper_courtside", story) == "Groundskeeper"

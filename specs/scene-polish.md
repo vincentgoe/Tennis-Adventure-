@@ -61,6 +61,30 @@ conversations.
   blue. Both rackets are smaller (realistic next to the player) and lean
   against the wall head down, handle up.
 
+### Second round of author feedback
+
+- **Labels only on hover:** names of locations, people and objects appear only
+  while the mouse is over them. Exit arrows stay visible.
+- **Everyone who talks gets a speech bubble:** the steward now stands on the
+  grounds (on the way to the locker room) and speaks in a bubble. The stranger
+  in Ending A speaks in bubbles too.
+- **Groundskeeper after the racket choice:** he stays at the edge of the court
+  as a small side interaction. Clicking him there shows his line ("So, did you
+  find a racket?") in a bubble, without moving to his own scene. Before the
+  racket choice, clicking him still leads to his scene as before. Story data:
+  `go_groundskeeper` requires no racket choice; a new court action
+  `talk_groundskeeper_courtside` requires the choice. When a match is due and
+  he is known, the court image shows him next to the awake umpire.
+- **Art:** the rallying players hold rackets; the bucket looks like a real
+  bucket (tapered, rim, handle, water).
+- **Award ceremony:** a real podium with places 1, 2 and 3 and a person on
+  each. Win: the player on 1 with the trophy. Loss: the winner on 1, the player
+  on 2 (runner-up), clapping.
+- **The stranger:** black trench coat and a black tennis headband. In Ending A
+  he walks up to the player, asks for the racket in a speech bubble, looks at
+  it, says "You made a good choice, kid." in a second bubble, hands it back and
+  disappears. The animation plays once, inside the ending image.
+
 ## Out of scope
 
 - An opponent and a ball during matches: that is the minigame (stage 2).
