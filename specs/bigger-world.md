@@ -28,7 +28,7 @@ exploring takes a little more effort.
 | Screen | Scene id | What is there | Blocked until |
 | --- | --- | --- | --- |
 | Entrance (start) | `entrance` | Gate, office building, the steward at the gate | – |
-| Main path | `main_path` | Locker room building, food stand, signpost | Registration (the steward stops you at the gate) |
+| Main path | `main_path` | Locker room building, fountain with two visitors, signpost | Registration (the steward stops you at the gate) |
 | Center Court | `court` | Net with the match indicator, umpire, benches, spectators | Changing |
 | Court 2 | `court_2` | Side court; the groundskeeper appears here after the hint | Changing (reached via the Center Court) |
 | Back corner | `shed` | Path with trees and the shed | Changing |

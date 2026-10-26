@@ -83,7 +83,7 @@ The story order and the rules stay the same; only where they happen changes.
                              ▲              (groundskeeper)
                              │
  [Entrance] ──▶ [Main path] ─┘
-  (office)      (locker room, food stand)
+  (office)      (locker room, fountain)
                      │
                      ▼
               [Back corner]
