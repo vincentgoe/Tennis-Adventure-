@@ -156,3 +156,39 @@ name from `story.json`.
   game starts.
 - **Q3 – A6:** a separate, later feature.
 - **Q4 – Inventory:** always visible.
+
+### Implementation decisions (step 7)
+
+- **State:** a dataclass in `logic.py` with `scene`, `items`, `flags`,
+  `choices`, `match_results`, `ending`. Rule functions do not mutate a state.
+  They return a new one, so a rejected action can be checked with
+  `new_state == old_state`.
+- **Saved fields:** all six state fields. `ending` is included now so the
+  database format does not change when endings are added.
+- **Not saved:** story content, the last message, whether a racket was
+  inspected, points within a match.
+- **Database:** SQLite file `plot_twist.db` in the project folder (ignored by
+  git). One table `game` with a single row and the columns `scene`, `items`,
+  `flags`, `choices`, `match_results`, `ending`. Lists, sets and dicts are stored
+  as JSON text. Every function in `db.py` takes the database path as a
+  parameter, so tests can use `tmp_path`.
+- **Central rule:** an action is allowed only if (1) the game has not ended,
+  (2) the action belongs to the current scene, and (3) all of its `requires`
+  are met. Otherwise it is rejected, the state stays the same, and the first
+  matching `blocked_text` is the message.
+- **Visible actions:** allowed actions plus blocked actions that have a
+  `blocked_text`. All others are hidden.
+- **Hidden or unknown action triggered anyway** (e.g. a stale button click
+  after a Streamlit rerun): rejected, state unchanged, message
+  `ui_texts.not_available` ("You can't do that right now.").
+- **Inventory order:** the order in which items were collected.
+- **Message after restart:** the last message is not restored. After a restart
+  the player sees the scene text.
+- **Where saving happens:** `app.py` checks the action with `logic.py` and,
+  only if it was accepted, saves with `db.py`. This wiring is covered by the
+  resume test and the manual check.
+- **Text-only actions** (inspecting, repeated talks) count as accepted actions
+  and are saved like every other accepted action. No special case.
+- **Broken story data** (e.g. no matching match outcome): raise a clear error.
+  This is a bug in `story.json`, not a game situation. A test that validates
+  `story.json` can be added later.
