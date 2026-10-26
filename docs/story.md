@@ -28,7 +28,7 @@ never mentioned.
 | 8   | Equipment shed (corner of the grounds) | Locked until the player has the key. Inside are two rackets. Inspecting is optional. The player takes exactly one. |
 | 9   | Court — rounds 3 and 4 (final)  | The result depends on the chosen racket (see match system). |
 | 10a | Award ceremony — win            | The player receives the trophy, followed by the bonus scene. |
-| 10b | Award ceremony — loss           | The player stands beside the winner and applauds. **Ending B.** |
+| 10b | Award ceremony — loss           | The player stands on the second step of the podium and applauds the winner. **Ending B.** |
 | 11  | Bonus scene (after 10a)         | Text and animation only, no interaction. A mysterious person asks to look at the racket, grins, says *"You made a good choice, kid."* and disappears. It is only hinted that this is Roger F. **Ending A.** |
 
 ## Items
@@ -59,6 +59,8 @@ never mentioned.
 The shed is **visible** from the start. Without the key, trying to open it is
 rejected with a message, and the player's location and inventory do not change.
 With the key, the same interaction gets one extra option: unlock the shed.
+After the first unlock, the shed stays open: the padlock lies in the grass and
+the door leads straight inside.
 
 ### Groundskeeper dialogue (PT R3)
 
@@ -66,9 +68,10 @@ With the key, the same interaction gets one extra option: unlock the shed.
 | -------------------------------- | ------- |
 | Before handing over the key      | Points to the shed and hands over the key. |
 | Key handed over, no racket yet   | "There should still be spare rackets in the shed." |
-| After the racket choice          | "So, did you find a racket?" |
+| After the racket choice          | "So, did you find a racket?" (at the edge of the court, without a scene change) |
 
-There is never a second key.
+There is never a second key. People in the picture speak in speech bubbles;
+narration appears in the text box.
 
 ## Access rules
 
@@ -205,6 +208,9 @@ Final wording, approved by the author. The story data file uses these texts.
   > heavy padlock hangs on the door.
 - **Open without key (rejected):**
   > You pull at the door, but the padlock won't budge. You'll need a key.
+- **Open (after the first unlock):**
+  > An old wooden shed in the corner of the grounds. The padlock lies in the
+  > grass, and the door stands ajar.
 - **Unlocked, with rackets:**
   > The lock clicks open and the door creaks. Dust floats in the light. Between
   > old nets and ball baskets, two rackets lean against the wall. One looks
@@ -288,8 +294,8 @@ Final wording, approved by the author. The story data file uses these texts.
   >
   > **ENDING A: The Racket of a Legend**
 - **Loss, Ending B:**
-  > You stand to the side as the winner lifts the trophy, clapping along with the
-  > crowd. So close.
+  > You stand on the second step as the winner lifts the trophy, clapping along
+  > with the crowd. So close.
   >
   > **ENDING B: Runner-up**
 

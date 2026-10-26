@@ -34,9 +34,9 @@ tournament feel alive, in the spirit of block-style games like Crossy Road.
 
 ## Done when
 
-- [ ] New test written first and green: every scene image, every ending image
+- [x] New test written first and green: every scene image, every ending image
       and the player sprite contain at least one animation.
-- [ ] All existing tests are still green and unchanged.
-- [ ] Manual check: people bob and blink, clouds drift, trees sway, and nothing
+- [x] All existing tests are still green and unchanged.
+- [x] Manual check: people bob and blink, clouds drift, trees sway, and nothing
       jitters or looks distracting.
 - [ ] Committed on `animations`, pushed, reviewed, merged into `main`.

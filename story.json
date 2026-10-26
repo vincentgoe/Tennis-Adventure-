@@ -1,6 +1,19 @@
 {
   "title": "Plot Twist",
   "start_scene": "grounds",
+  "player": [
+    {
+      "when": {
+        "flags": [
+          "changed"
+        ]
+      },
+      "image": "sprites/player.svg"
+    },
+    {
+      "image": "sprites/player_street.svg"
+    }
+  ],
   "items": {
     "key": {
       "name": "Rusty key",
@@ -73,7 +86,11 @@
                 ]
               },
               "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
-              "speaker": "Steward"
+              "speaker": "Steward",
+              "speaker_at": [
+                161,
+                63
+              ]
             },
             {
               "text": "The locker room is closed. The tournament has already started."
@@ -108,7 +125,11 @@
                 ]
               },
               "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
-              "speaker": "Steward"
+              "speaker": "Steward",
+              "speaker_at": [
+                161,
+                63
+              ]
             },
             {
               "text": "You're still in your street clothes. Get changed in the locker room first."
@@ -147,7 +168,11 @@
                 ]
               },
               "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
-              "speaker": "Steward"
+              "speaker": "Steward",
+              "speaker_at": [
+                161,
+                63
+              ]
             },
             {
               "text": "Not now. Get changed first, your first match starts soon."
@@ -185,6 +210,10 @@
           "id": "register",
           "label": "Register for the tournament",
           "speaker": "Woman at the desk",
+          "speaker_at": [
+            160,
+            66
+          ],
           "requires": {
             "not_flags": [
               "registered"
@@ -209,6 +238,10 @@
           "id": "ask_for_racket",
           "label": "Ask for a spare racket",
           "speaker": "Woman at the desk",
+          "speaker_at": [
+            160,
+            66
+          ],
           "requires": {
             "flags": [
               "needs_racket"
@@ -236,6 +269,10 @@
           "id": "talk_office_no_racket",
           "label": "Talk to the woman at the desk",
           "speaker": "Woman at the desk",
+          "speaker_at": [
+            160,
+            66
+          ],
           "requires": {
             "flags": [
               "knows_groundskeeper"
@@ -258,6 +295,10 @@
           "id": "talk_office_after_choice",
           "label": "Talk to the woman at the desk",
           "speaker": "Woman at the desk",
+          "speaker_at": [
+            160,
+            66
+          ],
           "requires": {
             "choice_made": "racket"
           },
@@ -293,9 +334,9 @@
     "locker_room": {
       "name": "Locker room",
       "player": {
-        "x": 146,
-        "y": 128,
-        "scale": 1.2
+        "x": 140,
+        "y": 88,
+        "scale": 2.0
       },
       "texts": [
         {
@@ -335,7 +376,7 @@
           },
           "icon": ":material/directions_walk:",
           "hotspot": {
-            "x": 4,
+            "x": 286,
             "y": 150,
             "w": 30,
             "h": 26,
@@ -352,6 +393,16 @@
         "scale": 1.0
       },
       "texts": [
+        {
+          "when": {
+            "match_due": true,
+            "flags": [
+              "knows_groundskeeper"
+            ]
+          },
+          "text": "The umpire waves you over to the net. Your next match is ready.",
+          "image": "scenes/court_match_groundskeeper.svg"
+        },
         {
           "when": {
             "match_due": true
@@ -398,12 +449,39 @@
           "requires": {
             "flags": [
               "knows_groundskeeper"
-            ]
+            ],
+            "no_choice": "racket"
           },
           "effects": {
             "move_to": "groundskeeper"
           },
           "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 0,
+            "y": 108,
+            "w": 50,
+            "h": 60,
+            "name": "Groundskeeper"
+          }
+        },
+        {
+          "id": "talk_groundskeeper_courtside",
+          "label": "Talk to the groundskeeper",
+          "speaker": "Groundskeeper",
+          "speaker_at": [
+            13,
+            116
+          ],
+          "requires": {
+            "flags": [
+              "knows_groundskeeper"
+            ],
+            "choice_made": "racket"
+          },
+          "effects": {
+            "show_text": "\"So, did you find a racket?\""
+          },
+          "icon": ":material/chat:",
           "hotspot": {
             "x": 0,
             "y": 108,
@@ -432,8 +510,8 @@
     "groundskeeper": {
       "name": "Groundskeeper",
       "player": {
-        "x": 206,
-        "y": 106,
+        "x": 196,
+        "y": 100,
         "scale": 1.5
       },
       "texts": [
@@ -447,6 +525,10 @@
           "id": "talk_groundskeeper_first",
           "label": "Talk to the groundskeeper",
           "speaker": "Groundskeeper",
+          "speaker_at": [
+            121,
+            95
+          ],
           "requires": {
             "not_items": [
               "key"
@@ -458,10 +540,10 @@
           },
           "icon": ":material/chat:",
           "hotspot": {
-            "x": 106,
-            "y": 66,
-            "w": 56,
-            "h": 98,
+            "x": 100,
+            "y": 96,
+            "w": 42,
+            "h": 70,
             "name": "Groundskeeper"
           }
         },
@@ -469,6 +551,10 @@
           "id": "talk_groundskeeper_has_key",
           "label": "Talk to the groundskeeper",
           "speaker": "Groundskeeper",
+          "speaker_at": [
+            121,
+            95
+          ],
           "requires": {
             "items": [
               "key"
@@ -480,10 +566,10 @@
           },
           "icon": ":material/chat:",
           "hotspot": {
-            "x": 106,
-            "y": 66,
-            "w": 56,
-            "h": 98,
+            "x": 100,
+            "y": 96,
+            "w": 42,
+            "h": 70,
             "name": "Groundskeeper"
           }
         },
@@ -491,6 +577,10 @@
           "id": "talk_groundskeeper_after_choice",
           "label": "Talk to the groundskeeper",
           "speaker": "Groundskeeper",
+          "speaker_at": [
+            121,
+            95
+          ],
           "requires": {
             "choice_made": "racket"
           },
@@ -499,10 +589,10 @@
           },
           "icon": ":material/chat:",
           "hotspot": {
-            "x": 106,
-            "y": 66,
-            "w": 56,
-            "h": 98,
+            "x": 100,
+            "y": 96,
+            "w": 42,
+            "h": 70,
             "name": "Groundskeeper"
           }
         },
@@ -532,6 +622,15 @@
       },
       "texts": [
         {
+          "when": {
+            "flags": [
+              "shed_unlocked"
+            ]
+          },
+          "text": "An old wooden shed in the corner of the grounds. The padlock lies in the grass, and the door stands ajar.",
+          "image": "scenes/shed_open.svg"
+        },
+        {
           "text": "An old wooden shed in the corner of the grounds. The paint is peeling, and a heavy padlock hangs on the door.",
           "image": "scenes/shed.svg"
         }
@@ -545,15 +644,48 @@
               "key"
             ]
           },
+          "hide_when": {
+            "flags": [
+              "shed_unlocked"
+            ]
+          },
           "blocked_text": [
             {
               "text": "You pull at the door, but the padlock won't budge. You'll need a key."
             }
           ],
           "effects": {
-            "move_to": "shed_inside"
+            "move_to": "shed_inside",
+            "set_flags": [
+              "shed_unlocked"
+            ]
           },
           "icon": ":material/lock_open:",
+          "hotspot": {
+            "x": 134,
+            "y": 84,
+            "w": 52,
+            "h": 72,
+            "name": "Shed door",
+            "walk_to": [
+              114,
+              100
+            ],
+            "drop": "padlock"
+          }
+        },
+        {
+          "id": "enter_shed",
+          "label": "Go inside",
+          "requires": {
+            "flags": [
+              "shed_unlocked"
+            ]
+          },
+          "effects": {
+            "move_to": "shed_inside"
+          },
+          "icon": ":material/door_open:",
           "hotspot": {
             "x": 134,
             "y": 84,
@@ -611,12 +743,13 @@
           },
           "icon": ":material/search:",
           "hotspot": {
-            "x": 86,
-            "y": 54,
-            "w": 46,
-            "h": 88,
+            "x": 96,
+            "y": 96,
+            "w": 28,
+            "h": 46,
             "name": "Wilson Blade"
-          }
+          },
+          "closeup": "closeups/wilson.svg"
         },
         {
           "id": "inspect_yonex",
@@ -629,12 +762,13 @@
           },
           "icon": ":material/search:",
           "hotspot": {
-            "x": 136,
-            "y": 54,
-            "w": 48,
-            "h": 90,
+            "x": 156,
+            "y": 96,
+            "w": 28,
+            "h": 46,
             "name": "Old Yonex"
-          }
+          },
+          "closeup": "closeups/yonex.svg"
         },
         {
           "id": "take_wilson",
@@ -651,10 +785,10 @@
           },
           "icon": ":material/back_hand:",
           "hotspot": {
-            "x": 86,
-            "y": 54,
-            "w": 46,
-            "h": 88,
+            "x": 96,
+            "y": 96,
+            "w": 28,
+            "h": 46,
             "name": "Wilson Blade"
           }
         },
@@ -673,10 +807,10 @@
           },
           "icon": ":material/back_hand:",
           "hotspot": {
-            "x": 136,
-            "y": 54,
-            "w": 48,
-            "h": 90,
+            "x": 156,
+            "y": 96,
+            "w": 28,
+            "h": 46,
             "name": "Old Yonex"
           }
         },
@@ -812,7 +946,7 @@
       "pages": [
         {
           "name": "Award ceremony",
-          "text": "You stand to the side as the winner lifts the trophy, clapping along with the crowd. So close.",
+          "text": "You stand on the second step as the winner lifts the trophy, clapping along with the crowd. So close.",
           "image": "endings/ceremony_loss.svg"
         }
       ]
@@ -825,6 +959,8 @@
     "replay_match": "Replay match",
     "give_up": "Give up",
     "give_up_confirm": "Giving up starts a completely new game. All your progress will be lost. Are you sure?",
-    "not_available": "You can't do that right now."
+    "not_available": "You can't do that right now.",
+    "continue": "Continue",
+    "the_end": "THE END"
   }
 }

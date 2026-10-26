@@ -86,3 +86,102 @@ def test_every_scene_ending_and_player_image_is_animated():
     still = [image for image in sorted(images)
              if "<animate" not in (ASSETS / image).read_text(encoding="utf-8")]
     assert still == []
+
+
+def test_every_player_image_exists_and_is_animated():
+    """specs/scene-polish.md: street clothes and tennis outfit."""
+    story = load_story()
+    images = [entry["image"] for entry in story.get("player", [])]
+    assert len(images) >= 2
+    problems = [image for image in images
+                if not (ASSETS / image).is_file()
+                or "<animate" not in (ASSETS / image).read_text(encoding="utf-8")]
+    assert problems == []
+
+
+def test_every_speaking_action_has_a_bubble_anchor_inside_the_image():
+    """specs/scene-polish.md: people speak in bubbles above their heads."""
+    story = load_story()
+    problems = []
+    for scene_id, scene in story["scenes"].items():
+        for action in scene["actions"]:
+            if "speaker" not in action:
+                continue
+            anchor = action.get("speaker_at")
+            if anchor is None or not _inside_image(anchor[0], anchor[1]):
+                problems.append(f"{scene_id}.{action['id']}")
+    assert problems == []
+
+
+def _at_court_after_round_two(**changes):
+    from logic import GameState
+    state = dict(
+        scene="court",
+        items=["key"],
+        flags={"registered", "changed", "needs_racket", "knows_groundskeeper"},
+        choices={},
+        match_results=["win", "loss"],
+        ending=None,
+    )
+    state.update(changes)
+    return GameState(**state)
+
+
+def test_groundskeeper_scene_is_reachable_before_the_racket_choice():
+    """specs/scene-polish.md: before the choice, he leads to his own scene."""
+    from logic import available_actions
+    story = load_story()
+    actions = available_actions(_at_court_after_round_two(), story)
+
+    assert "go_groundskeeper" in actions
+    assert "talk_groundskeeper_courtside" not in actions
+
+
+def test_groundskeeper_is_a_courtside_talk_after_the_racket_choice():
+    """specs/scene-polish.md: after the choice, he is a side interaction at
+    the court edge, and talking to him does not change the scene."""
+    from logic import apply_action, available_actions, speaker_for
+    story = load_story()
+    state = _at_court_after_round_two(items=["key", "yonex"], choices={"racket": "yonex"})
+
+    actions = available_actions(state, story)
+    assert "go_groundskeeper" not in actions
+    assert "talk_groundskeeper_courtside" in actions
+
+    new_state, accepted, message = apply_action(state, "talk_groundskeeper_courtside", story)
+    assert accepted is True
+    assert new_state == state
+    assert message
+    assert speaker_for(state, "talk_groundskeeper_courtside", story) == "Groundskeeper"
+
+
+def test_the_shed_stays_open_after_unlocking():
+    """specs/scene-polish.md: leaving the shed and coming back does not ask to
+    unlock it again."""
+    from logic import apply_action, available_actions
+    story = load_story()
+    state = _at_court_after_round_two(scene="shed")
+
+    state, accepted, _ = apply_action(state, "open_shed", story)
+    assert accepted is True and state.scene == "shed_inside"
+    state, _, _ = apply_action(state, "leave_shed_inside", story)
+    state, _, _ = apply_action(state, "go_shed", story)
+
+    actions = available_actions(state, story)
+    assert "open_shed" not in actions
+    assert "enter_shed" in actions
+    state, accepted, _ = apply_action(state, "enter_shed", story)
+    assert accepted is True and state.scene == "shed_inside"
+
+
+def test_every_inspect_action_has_an_existing_closeup():
+    """specs/scene-polish.md: inspecting a racket shows a close-up."""
+    story = load_story()
+    problems = []
+    for scene in story["scenes"].values():
+        for action in scene["actions"]:
+            if action["id"].startswith("inspect_"):
+                image = action.get("closeup")
+                if image is None or not (ASSETS / image).is_file():
+                    problems.append(action["id"])
+    assert problems == []

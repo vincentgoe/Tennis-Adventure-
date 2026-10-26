@@ -30,7 +30,22 @@ DEFAULT_ICONS = {
     "add_item": ":material/back_hand:",
 }
 
-st.set_page_config(page_title="Plot Twist", page_icon="🎾", layout="centered")
+st.set_page_config(
+    page_title="Plot Twist", page_icon="🎾", layout="wide", initial_sidebar_state="collapsed"
+)
+
+# Full-window look: no Streamlit toolbar or sidebar, little padding
+st.markdown(
+    """
+    <style>
+      header[data-testid="stHeader"], [data-testid="stToolbar"],
+      [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"] { display: none; }
+      .block-container { padding-top: 1rem; padding-bottom: 1rem; max-width: 1500px; }
+      h1 { padding-top: 0; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 @st.cache_data
@@ -52,21 +67,37 @@ def read_asset(path):
     return (ASSETS / path).read_text(encoding="utf-8")
 
 
+def player_position(state):
+    """Where the player stands in the current scene: where they last walked to
+    in this scene (kept for this session only), otherwise the scene's default."""
+    default = story["scenes"][state.scene].get("player")
+    walked = st.session_state.get("player_pos")
+    if default and walked and walked["scene"] == state.scene:
+        return {"x": walked["x"], "y": walked["y"], "scale": default["scale"]}
+    return default
+
+
 def scene_svg_with_player(state):
-    """The scene image as SVG text, with the player figure drawn into it."""
+    """The scene image as SVG text, with the player figure drawn into it.
+
+    The figure's outfit depends on the state (street clothes or tennis kit).
+    It is wrapped in <g id="player"><g class="hop"> so the component can let
+    it walk and hop.
+    """
     svg = read_asset(logic.scene_image(state, story)).strip()
-    player = story["scenes"][state.scene].get("player")
-    if player is None:
+    player = player_position(state)
+    sprite_path = logic.player_image(state, story)
+    if player is None or sprite_path is None:
         return svg
     scale = player["scale"]
-    sprite = read_asset("sprites/player.svg").strip().replace(
+    sprite = read_asset(sprite_path).strip().replace(
         "<svg ",
         f'<svg x="{player["x"]}" y="{player["y"]}" '
         f'width="{PLAYER_W * scale}" height="{PLAYER_H * scale}" ',
         1,
     )
     head, _, _ = svg.rpartition("</svg>")
-    return head + sprite + "</svg>"
+    return head + '<g id="player"><g class="hop">' + sprite + "</g></g></svg>"
 
 
 def action_icon(action):
@@ -91,6 +122,8 @@ def handle_action(action_id):
     """Check the action with logic.py and save only if it was accepted."""
     before = st.session_state.state
     speaker = logic.speaker_for(before, action_id, story)
+    anchor = logic.speaker_anchor(before, action_id, story)
+    closeup = logic.closeup_for(before, action_id, story)
     new_state, accepted, message = logic.apply_action(before, action_id, story)
     if accepted:
         save_game(DB_PATH, new_state)
@@ -101,7 +134,10 @@ def handle_action(action_id):
         "id": st.session_state.message_count,
         "text": message,
         "speaker": speaker,
+        "anchor": anchor,  # where the speech bubble points to, or None
+        "closeup_svg": read_asset(closeup) if closeup else None,  # item reveal
     }
+    st.session_state.ending_page = 0
 
 
 def ask_new_game():
@@ -120,87 +156,108 @@ def confirm_new_game():
     st.session_state.state = fresh
     st.session_state.feedback = None
     st.session_state.confirm_new_game = False
+    st.session_state.ending_page = 0
+    st.session_state.player_pos = None
+
+
+def next_ending_page():
+    st.session_state.ending_page = st.session_state.get("ending_page", 0) + 1
 
 
 def handle_click():
     """A hotspot in the scene image was clicked: same path as a button."""
     clicked = st.session_state.get("scene_view")
     if clicked and "action" in clicked:
+        walked = clicked.get("player")
+        if walked:
+            # Remember where the player walked to in this scene
+            st.session_state.player_pos = {
+                "scene": st.session_state.state.scene, "x": walked["x"], "y": walked["y"]}
         handle_action(clicked["action"])
 
 
 state = st.session_state.state
+ui = story["ui_texts"]
+
+main_col, corner_col = st.columns([5, 1], gap="medium")
 
 
-# --- Sidebar: inventory (always visible) ------------------------------------
+# --- Top right corner: inventory list and New game ----------------------------
 
-with st.sidebar:
-    st.header("Inventory")
-    if state.items:
-        for item_id in state.items:
-            item = story["items"][item_id]
-            icon_col, name_col = st.columns([1, 3], vertical_alignment="center")
-            with icon_col:
-                show_image(item.get("image"), width=48)
-            with name_col:
-                st.markdown(f"**{item['name']}**")
-    else:
-        st.caption("Empty")
+with corner_col:
+    with st.container(border=True):
+        st.markdown("**Inventory**")
+        if state.items:
+            for item_id in state.items:
+                item = story["items"][item_id]
+                icon_col, name_col = st.columns([1, 3], vertical_alignment="center")
+                with icon_col:
+                    show_image(item.get("image"), width=32)
+                with name_col:
+                    st.markdown(item["name"])
+        else:
+            st.caption("Empty")
 
-    st.divider()
-    ui = story["ui_texts"]
-    if st.session_state.get("confirm_new_game"):
-        st.warning(ui["new_game_confirm"], icon=":material/help:")
-        yes_col, cancel_col = st.columns(2)
-        yes_col.button(ui["new_game_yes"], type="primary", on_click=confirm_new_game, width="stretch")
-        cancel_col.button(ui["new_game_cancel"], on_click=cancel_new_game, width="stretch")
-    else:
-        st.button("New game", icon=":material/restart_alt:", on_click=ask_new_game, width="stretch")
+        if st.session_state.get("confirm_new_game"):
+            st.warning(ui["new_game_confirm"], icon=":material/help:")
+            st.button(ui["new_game_yes"], type="primary", on_click=confirm_new_game, width="stretch")
+            st.button(ui["new_game_cancel"], on_click=cancel_new_game, width="stretch")
+        else:
+            st.button("New game", icon=":material/restart_alt:", on_click=ask_new_game, width="stretch")
 
 
 # --- Main screen ------------------------------------------------------------
 
-st.title(f"🎾 {story['title']}")
+with main_col:
+    st.title(f"🎾 {story['title']}")
 
-if state.ending is not None:
-    ending = story["endings"][state.ending]
-    if st.session_state.feedback and st.session_state.feedback["text"]:
-        st.markdown(st.session_state.feedback["text"])
-    for page in ending["pages"]:
-        st.subheader(page["name"])
-        show_image(page.get("image"))
+    if state.ending is not None:
+        # End scenes, one page at a time, so each animation starts when shown
+        ending = story["endings"][state.ending]
+        pages = ending["pages"]
+        index = min(st.session_state.get("ending_page", 0), len(pages) - 1)
+        if index == 0 and st.session_state.feedback and st.session_state.feedback["text"]:
+            st.markdown(st.session_state.feedback["text"])
+        page = pages[index]
+        st.header(page["name"])
+        show_image(page.get("image"), width=900)
         st.markdown(page["text"])
-    st.success(ending["title"], icon=":material/emoji_events:")
-    st.stop()
+        if index < len(pages) - 1:
+            st.button(ui["continue"], icon=":material/arrow_forward:", type="primary",
+                      on_click=next_ending_page)
+        else:
+            st.success(ending["title"], icon=":material/emoji_events:")
+        st.stop()
 
-scene = story["scenes"][state.scene]
-st.header(scene["name"])
+    scene = story["scenes"][state.scene]
+    st.header(scene["name"])
 
-# The last message is shown in the dialogue box inside the scene image
-feedback = st.session_state.feedback
-message = feedback if feedback and feedback["text"] else None
+    # The last message is shown in the dialogue box inside the scene image
+    feedback = st.session_state.feedback
+    message = feedback if feedback and feedback["text"] else None
 
-scene_view(
-    svg=scene_svg_with_player(state),
-    hotspots=logic.scene_hotspots(state, story),
-    message=message,
-    width=IMAGE_W,
-    height=IMAGE_H,
-    key="scene_view",
-    on_change=handle_click,
-    default=None,
-)
-st.caption("Click on things in the picture. Arrows lead back.")
-st.markdown(logic.scene_text(state, story))
+    scene_view(
+        svg=scene_svg_with_player(state),
+        hotspots=logic.scene_hotspots(state, story),
+        player=player_position(state),  # where the player stands now, for walking
+        message=message,
+        width=IMAGE_W,
+        height=IMAGE_H,
+        key="scene_view",
+        on_change=handle_click,
+        default=None,
+    )
+    st.caption("Click on things in the picture. Arrows lead back.")
+    st.markdown(logic.scene_text(state, story))
 
-with st.expander("All actions", icon=":material/list:"):
-    for action_id in logic.available_actions(state, story):
-        action = logic.find_action(story, state.scene, action_id)
-        st.button(
-            action["label"],
-            key=action_id,
-            icon=action_icon(action),
-            on_click=handle_action,
-            args=(action_id,),
-            width="stretch",
-        )
+    with st.expander("All actions", icon=":material/list:"):
+        for action_id in logic.available_actions(state, story):
+            action = logic.find_action(story, state.scene, action_id)
+            st.button(
+                action["label"],
+                key=action_id,
+                icon=action_icon(action),
+                on_click=handle_action,
+                args=(action_id,),
+                width="stretch",
+            )

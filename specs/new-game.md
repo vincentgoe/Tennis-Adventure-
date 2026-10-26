@@ -29,11 +29,11 @@ Until now, the only way to start over was to delete `plot_twist.db`.
 
 ## Done when
 
-- [ ] New tests written first and green:
+- [x] New tests written first and green:
   - A confirmed restart replaces the saved progress with a new game.
   - A cancelled restart leaves the saved progress unchanged.
-- [ ] All existing tests are still green and unchanged.
-- [ ] Manual check: "New game" → "Cancel" keeps the game; "New game" →
+- [x] All existing tests are still green and unchanged.
+- [x] Manual check: "New game" → "Cancel" keeps the game; "New game" →
       "Yes, start over" shows the grounds with an empty inventory; restarting
       the app after that also shows the grounds.
 - [ ] Committed on `new-game`, pushed, reviewed, merged into `main`.
