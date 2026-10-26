@@ -60,10 +60,10 @@
       /* While a conversation runs, a click anywhere moves it on */
       #catcher { position: absolute; inset: 0; z-index: 2; display: none; cursor: pointer; }
 
-      /* Game-style text: a local pixel font if installed, otherwise bold monospace */
-      @font-face { font-family: "GameFont"; src: url("PressStart2P-Regular.ttf"); }
-      .game-text { font-family: "GameFont", "Courier New", monospace; font-weight: bold;
-                   letter-spacing: 0.3px; }
+      /* Game-style text: Press Start 2P (SIL Open Font License, see
+         PressStart2P-OFL.txt), stored locally so the game works offline */
+      @font-face { font-family: "GameFont"; src: url("PressStart2P-Regular.ttf") format("truetype"); }
+      .game-text { font-family: "GameFont", "Courier New", monospace; letter-spacing: 0.5px; }
 
       /* Text box at the bottom of the image (narration, objects) */
       #dialog { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 3;
@@ -71,24 +71,24 @@
                 background: rgba(12, 12, 12, 0.94); color: #ffffff;
                 border: 3px solid #fbf7ee; border-radius: 4px;
                 box-shadow: 0 0 0 3px #111111;
-                padding: 14px 16px 12px; font-size: 14px; line-height: 1.6; }
+                padding: 16px 18px 14px; font-size: 11px; line-height: 2; }
       #speaker { position: absolute; top: -14px; left: 12px; display: none;
                  background: #d9743a; color: #ffffff; border: 2px solid #fbf7ee;
-                 border-radius: 3px; padding: 1px 8px; font-size: 11px; }
+                 border-radius: 3px; padding: 3px 8px; font-size: 9px; }
 
       /* Speech bubble above the speaker */
       #bubble { position: absolute; z-index: 3; display: none; cursor: pointer;
                 max-width: 58%; transform: translate(-50%, -100%);
                 background: #111111; color: #ffffff; border: 3px solid #fbf7ee;
                 border-radius: 8px; padding: 8px 12px 14px;
-                font-size: 14px; line-height: 1.5; box-shadow: 0 0 0 2px #111111; }
+                font-size: 11px; line-height: 1.9; box-shadow: 0 0 0 2px #111111; }
       #bubble::after, #bubble::before { content: ""; position: absolute; left: var(--tail, 50%);
                 transform: translateX(-50%); border-style: solid; }
       #bubble::before { bottom: -15px; border-width: 13px 9px 0 9px;
                 border-color: #fbf7ee transparent transparent transparent; }
       #bubble::after { bottom: -10px; border-width: 10px 6px 0 6px;
                 border-color: #111111 transparent transparent transparent; }
-      #bubble-name { font-size: 11px; color: #f0a46e; margin-bottom: 3px; }
+      #bubble-name { font-size: 9px; color: #f0a46e; margin-bottom: 4px; }
 
       .more { position: absolute; right: 10px; bottom: 3px; font: bold 11px monospace;
               color: #d9743a; animation: blink 0.9s steps(2, start) infinite; display: none; }
