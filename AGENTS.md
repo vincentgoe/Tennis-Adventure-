@@ -28,9 +28,9 @@ Note: the parent folder name ends with a space
 app.py               Streamlit screens only: render state, collect clicks
 logic.py             Game rules: pure functions, no Streamlit, no SQLite
 db.py                Persistence: save / load / reset game progress in SQLite
-<story data file>    Story content (format still to be decided, see below)
+story.json           Story content: scenes, actions, conditions, items, matches, endings
 tests/               pytest tests
-docs/                BRD (product-brief.md)
+docs/                BRD (product-brief.md) and story design (story.md)
 specs/               Task specs, one per feature (Why / What / Out of scope / Done when)
 AGENTS.md            This file
 ```
