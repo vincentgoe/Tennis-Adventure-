@@ -73,6 +73,31 @@ the door leads straight inside.
 There is never a second key. People in the picture speak in speech bubbles;
 narration appears in the text box.
 
+## World map
+
+Since `specs/bigger-world.md`, the grounds are split into five outdoor screens.
+The story order and the rules stay the same; only where they happen changes.
+
+```
+                       [Center Court] ──▶ [Court 2]
+                             ▲              (groundskeeper)
+                             │
+ [Entrance] ──▶ [Main path] ─┘
+  (office)      (locker room, food stand)
+                     │
+                     ▼
+              [Back corner]
+                (shed)
+```
+
+- The steward stands at the entrance gate and stops the player before
+  registration.
+- The groundskeeper appears on Court 2 after the hint from the office.
+- New approved texts: entrance after registration ("The entrance gate. The
+  tournament office is right here, and the main path leads further into the
+  grounds.") and Court 2 without the groundskeeper ("Court 2, a smaller court
+  next to the Center Court. Nobody is playing here right now.").
+
 ## Access rules
 
 | Phase                         | Accessible locations |

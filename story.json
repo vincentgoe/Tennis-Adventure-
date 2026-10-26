@@ -1,6 +1,6 @@
 {
   "title": "Plot Twist",
-  "start_scene": "grounds",
+  "start_scene": "entrance",
   "player": [
     {
       "when": {
@@ -29,11 +29,11 @@
     }
   },
   "scenes": {
-    "grounds": {
-      "name": "Tournament grounds",
+    "entrance": {
+      "name": "Entrance",
       "player": {
-        "x": 78,
-        "y": 120,
+        "x": 110,
+        "y": 122,
         "scale": 1.0
       },
       "texts": [
@@ -44,11 +44,11 @@
             ]
           },
           "text": "Sunshine, the pop of tennis balls, and a crowd finding their seats. Your name is on the draw. Now you just need to register at the tournament office.",
-          "image": "scenes/grounds.svg"
+          "image": "scenes/entrance.svg"
         },
         {
-          "text": "The courts are busy and the crowd is buzzing. The tournament office is by the entrance, and an old shed sits in the corner of the grounds.",
-          "image": "scenes/grounds.svg"
+          "text": "The entrance gate. The tournament office is right here, and the main path leads further into the grounds.",
+          "image": "scenes/entrance.svg"
         }
       ],
       "actions": [
@@ -68,14 +68,11 @@
           }
         },
         {
-          "id": "go_locker_room",
-          "label": "Go to the locker room",
+          "id": "go_main_path",
+          "label": "Go to the main path",
           "requires": {
             "flags": [
               "registered"
-            ],
-            "not_flags": [
-              "changed"
             ]
           },
           "blocked_text": [
@@ -88,106 +85,23 @@
               "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
               "speaker": "Steward",
               "speaker_at": [
-                161,
-                63
+                222,
+                66
               ]
-            },
-            {
-              "text": "The locker room is closed. The tournament has already started."
             }
           ],
           "effects": {
-            "move_to": "locker_room"
+            "move_to": "main_path"
           },
           "icon": ":material/directions_walk:",
           "hotspot": {
-            "x": 170,
-            "y": 46,
-            "w": 78,
-            "h": 54,
-            "name": "Lockers"
-          }
-        },
-        {
-          "id": "go_courts",
-          "label": "Go to the courts",
-          "requires": {
-            "flags": [
-              "registered",
-              "changed"
-            ]
-          },
-          "blocked_text": [
-            {
-              "when": {
-                "not_flags": [
-                  "registered"
-                ]
-              },
-              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
-              "speaker": "Steward",
-              "speaker_at": [
-                161,
-                63
-              ]
-            },
-            {
-              "text": "You're still in your street clothes. Get changed in the locker room first."
-            }
-          ],
-          "effects": {
-            "move_to": "court"
-          },
-          "icon": ":material/directions_walk:",
-          "hotspot": {
-            "x": 110,
-            "y": 102,
-            "w": 140,
-            "h": 66,
-            "name": "Courts",
-            "label_at": [
-              180,
-              114
-            ]
-          }
-        },
-        {
-          "id": "go_shed",
-          "label": "Go to the old shed",
-          "requires": {
-            "flags": [
-              "registered",
-              "changed"
-            ]
-          },
-          "blocked_text": [
-            {
-              "when": {
-                "not_flags": [
-                  "registered"
-                ]
-              },
-              "text": "A steward stops you. \"Sorry, players only. Please register at the tournament office first.\"",
-              "speaker": "Steward",
-              "speaker_at": [
-                161,
-                63
-              ]
-            },
-            {
-              "text": "Not now. Get changed first, your first match starts soon."
-            }
-          ],
-          "effects": {
-            "move_to": "shed"
-          },
-          "icon": ":material/directions_walk:",
-          "hotspot": {
-            "x": 262,
-            "y": 58,
-            "w": 52,
-            "h": 42,
-            "name": "Shed"
+            "x": 286,
+            "y": 150,
+            "w": 30,
+            "h": 26,
+            "marker": "exit",
+            "direction": "right",
+            "name": "Main path"
           }
         }
       ]
@@ -316,9 +230,9 @@
         },
         {
           "id": "leave_office",
-          "label": "Back to the grounds",
+          "label": "Back to the entrance",
           "effects": {
-            "move_to": "grounds"
+            "move_to": "entrance"
           },
           "icon": ":material/directions_walk:",
           "hotspot": {
@@ -326,7 +240,126 @@
             "y": 150,
             "w": 30,
             "h": 26,
-            "marker": "exit"
+            "marker": "exit",
+            "direction": "right",
+            "name": "Entrance"
+          }
+        }
+      ]
+    },
+    "main_path": {
+      "name": "Main path",
+      "player": {
+        "x": 40,
+        "y": 120,
+        "scale": 1.0
+      },
+      "texts": [
+        {
+          "text": "The courts are busy and the crowd is buzzing. The tournament office is by the entrance, and an old shed sits in the corner of the grounds.",
+          "image": "scenes/main_path.svg"
+        }
+      ],
+      "actions": [
+        {
+          "id": "go_locker_room",
+          "label": "Go to the locker room",
+          "requires": {
+            "flags": [
+              "registered"
+            ],
+            "not_flags": [
+              "changed"
+            ]
+          },
+          "blocked_text": [
+            {
+              "text": "The locker room is closed. The tournament has already started."
+            }
+          ],
+          "effects": {
+            "move_to": "locker_room"
+          },
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 18,
+            "y": 44,
+            "w": 88,
+            "h": 58,
+            "name": "Lockers"
+          }
+        },
+        {
+          "id": "go_center_court",
+          "label": "Go to the Center Court",
+          "requires": {
+            "flags": [
+              "registered",
+              "changed"
+            ]
+          },
+          "blocked_text": [
+            {
+              "text": "You're still in your street clothes. Get changed in the locker room first."
+            }
+          ],
+          "effects": {
+            "move_to": "court"
+          },
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 148,
+            "y": 82,
+            "w": 30,
+            "h": 22,
+            "marker": "exit",
+            "direction": "up",
+            "name": "Center Court"
+          }
+        },
+        {
+          "id": "go_back_corner",
+          "label": "Go to the back corner",
+          "requires": {
+            "flags": [
+              "registered",
+              "changed"
+            ]
+          },
+          "blocked_text": [
+            {
+              "text": "Not now. Get changed first, your first match starts soon."
+            }
+          ],
+          "effects": {
+            "move_to": "shed"
+          },
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 148,
+            "y": 152,
+            "w": 30,
+            "h": 24,
+            "marker": "exit",
+            "direction": "down",
+            "name": "Back corner"
+          }
+        },
+        {
+          "id": "back_to_entrance",
+          "label": "Back to the entrance",
+          "effects": {
+            "move_to": "entrance"
+          },
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 4,
+            "y": 150,
+            "w": 30,
+            "h": 26,
+            "marker": "exit",
+            "direction": "left",
+            "name": "Entrance"
           }
         }
       ]
@@ -370,9 +403,9 @@
         },
         {
           "id": "leave_locker_room",
-          "label": "Back to the grounds",
+          "label": "Back to the main path",
           "effects": {
-            "move_to": "grounds"
+            "move_to": "main_path"
           },
           "icon": ":material/directions_walk:",
           "hotspot": {
@@ -380,7 +413,9 @@
             "y": 150,
             "w": 30,
             "h": 26,
-            "marker": "exit"
+            "marker": "exit",
+            "direction": "right",
+            "name": "Main path"
           }
         }
       ]
@@ -395,29 +430,10 @@
       "texts": [
         {
           "when": {
-            "match_due": true,
-            "flags": [
-              "knows_groundskeeper"
-            ]
-          },
-          "text": "The umpire waves you over to the net. Your next match is ready.",
-          "image": "scenes/court_match_groundskeeper.svg"
-        },
-        {
-          "when": {
             "match_due": true
           },
           "text": "The umpire waves you over to the net. Your next match is ready.",
           "image": "scenes/court_match.svg"
-        },
-        {
-          "when": {
-            "flags": [
-              "knows_groundskeeper"
-            ]
-          },
-          "text": "The court is quiet for now. Next to it, the groundskeeper is raking the clay.",
-          "image": "scenes/court_groundskeeper.svg"
         },
         {
           "text": "The court is quiet for now.",
@@ -444,57 +460,10 @@
           }
         },
         {
-          "id": "go_groundskeeper",
-          "label": "Go to the groundskeeper",
-          "requires": {
-            "flags": [
-              "knows_groundskeeper"
-            ],
-            "no_choice": "racket"
-          },
+          "id": "go_court_2",
+          "label": "Go to Court 2",
           "effects": {
-            "move_to": "groundskeeper"
-          },
-          "icon": ":material/directions_walk:",
-          "hotspot": {
-            "x": 0,
-            "y": 108,
-            "w": 50,
-            "h": 60,
-            "name": "Groundskeeper"
-          }
-        },
-        {
-          "id": "talk_groundskeeper_courtside",
-          "label": "Talk to the groundskeeper",
-          "speaker": "Groundskeeper",
-          "speaker_at": [
-            13,
-            116
-          ],
-          "requires": {
-            "flags": [
-              "knows_groundskeeper"
-            ],
-            "choice_made": "racket"
-          },
-          "effects": {
-            "show_text": "\"So, did you find a racket?\""
-          },
-          "icon": ":material/chat:",
-          "hotspot": {
-            "x": 0,
-            "y": 108,
-            "w": 50,
-            "h": 60,
-            "name": "Groundskeeper"
-          }
-        },
-        {
-          "id": "leave_court",
-          "label": "Back to the grounds",
-          "effects": {
-            "move_to": "grounds"
+            "move_to": "court_2"
           },
           "icon": ":material/directions_walk:",
           "hotspot": {
@@ -502,13 +471,32 @@
             "y": 150,
             "w": 30,
             "h": 26,
-            "marker": "exit"
+            "marker": "exit",
+            "direction": "right",
+            "name": "Court 2"
+          }
+        },
+        {
+          "id": "leave_court",
+          "label": "Back to the main path",
+          "effects": {
+            "move_to": "main_path"
+          },
+          "icon": ":material/directions_walk:",
+          "hotspot": {
+            "x": 4,
+            "y": 150,
+            "w": 30,
+            "h": 26,
+            "marker": "exit",
+            "direction": "down",
+            "name": "Main path"
           }
         }
       ]
     },
-    "groundskeeper": {
-      "name": "Groundskeeper",
+    "court_2": {
+      "name": "Court 2",
       "player": {
         "x": 196,
         "y": 100,
@@ -516,8 +504,17 @@
       },
       "texts": [
         {
+          "when": {
+            "flags": [
+              "knows_groundskeeper"
+            ]
+          },
           "text": "The groundskeeper is raking the clay next to the court.",
-          "image": "scenes/groundskeeper.svg"
+          "image": "scenes/court_2_groundskeeper.svg"
+        },
+        {
+          "text": "Court 2, a smaller court next to the Center Court. Nobody is playing here right now.",
+          "image": "scenes/court_2.svg"
         }
       ],
       "actions": [
@@ -530,6 +527,9 @@
             95
           ],
           "requires": {
+            "flags": [
+              "knows_groundskeeper"
+            ],
             "not_items": [
               "key"
             ]
@@ -556,6 +556,9 @@
             95
           ],
           "requires": {
+            "flags": [
+              "knows_groundskeeper"
+            ],
             "items": [
               "key"
             ],
@@ -582,6 +585,9 @@
             95
           ],
           "requires": {
+            "flags": [
+              "knows_groundskeeper"
+            ],
             "choice_made": "racket"
           },
           "effects": {
@@ -597,24 +603,26 @@
           }
         },
         {
-          "id": "leave_groundskeeper",
-          "label": "Back to the court",
+          "id": "leave_court_2",
+          "label": "Back to the Center Court",
           "effects": {
             "move_to": "court"
           },
           "icon": ":material/directions_walk:",
           "hotspot": {
-            "x": 286,
+            "x": 4,
             "y": 150,
             "w": 30,
             "h": 26,
-            "marker": "exit"
+            "marker": "exit",
+            "direction": "left",
+            "name": "Center Court"
           }
         }
       ]
     },
     "shed": {
-      "name": "Old shed",
+      "name": "Back corner",
       "player": {
         "x": 244,
         "y": 108,
@@ -696,17 +704,19 @@
         },
         {
           "id": "leave_shed",
-          "label": "Back to the grounds",
+          "label": "Back to the main path",
           "effects": {
-            "move_to": "grounds"
+            "move_to": "main_path"
           },
           "icon": ":material/directions_walk:",
           "hotspot": {
-            "x": 4,
-            "y": 150,
+            "x": 250,
+            "y": 84,
             "w": 30,
-            "h": 26,
-            "marker": "exit"
+            "h": 20,
+            "marker": "exit",
+            "direction": "up",
+            "name": "Main path"
           }
         }
       ]
@@ -818,7 +828,7 @@
           "id": "leave_shed_inside",
           "label": "Leave the shed",
           "effects": {
-            "move_to": "grounds"
+            "move_to": "shed"
           },
           "icon": ":material/directions_walk:",
           "hotspot": {
@@ -826,7 +836,9 @@
             "y": 150,
             "w": 30,
             "h": 26,
-            "marker": "exit"
+            "marker": "exit",
+            "direction": "down",
+            "name": "Back corner"
           }
         }
       ]
