@@ -59,6 +59,8 @@ never mentioned.
 The shed is **visible** from the start. Without the key, trying to open it is
 rejected with a message, and the player's location and inventory do not change.
 With the key, the same interaction gets one extra option: unlock the shed.
+After the first unlock, the shed stays open: the padlock lies in the grass and
+the door leads straight inside.
 
 ### Groundskeeper dialogue (PT R3)
 
@@ -66,9 +68,10 @@ With the key, the same interaction gets one extra option: unlock the shed.
 | -------------------------------- | ------- |
 | Before handing over the key      | Points to the shed and hands over the key. |
 | Key handed over, no racket yet   | "There should still be spare rackets in the shed." |
-| After the racket choice          | "So, did you find a racket?" |
+| After the racket choice          | "So, did you find a racket?" (at the edge of the court, without a scene change) |
 
-There is never a second key.
+There is never a second key. People in the picture speak in speech bubbles;
+narration appears in the text box.
 
 ## Access rules
 
@@ -205,6 +208,9 @@ Final wording, approved by the author. The story data file uses these texts.
   > heavy padlock hangs on the door.
 - **Open without key (rejected):**
   > You pull at the door, but the padlock won't budge. You'll need a key.
+- **Open (after the first unlock):**
+  > An old wooden shed in the corner of the grounds. The padlock lies in the
+  > grass, and the door stands ajar.
 - **Unlocked, with rackets:**
   > The lock clicks open and the door creaks. Dust floats in the light. Between
   > old nets and ball baskets, two rackets lean against the wall. One looks

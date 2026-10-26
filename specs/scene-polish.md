@@ -138,7 +138,7 @@ conversations.
 
 ## Done when
 
-- [ ] New tests written first and green:
+- [x] New tests written first and green:
   - `player_image` returns street clothes before and the tennis outfit after
     changing.
   - `scene_hotspots` marks the locked door as not allowed without the key and
@@ -147,8 +147,8 @@ conversations.
     `None`.
   - In `story.json`, every player image exists and is animated, and every
     action with a `speaker` has a `speaker_at` inside the image.
-- [ ] All existing tests are still green and unchanged.
-- [ ] Manual check: outfit changes in the locker room, speech bubbles above the
+- [x] All existing tests are still green and unchanged.
+- [x] Manual check: outfit changes in the locker room, speech bubbles above the
       woman and the groundskeeper, the unlock animation, the sleeping and awake
       umpire, and the new details in each scene.
 - [ ] Committed on `scene-polish`, pushed, reviewed, merged into `main`.
