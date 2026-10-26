@@ -164,9 +164,42 @@ def scene_hotspots(state, story):
                 "marker": spot.get("marker"),
                 "name": spot.get("name"),
                 "label_at": spot.get("label_at"),
+                # Blocked-but-visible actions are clickable too. `allowed`
+                # tells the component whether to play an animation first.
+                "allowed": conditions_met(state, action.get("requires", {}), story),
+                "walk_to": spot.get("walk_to"),
+                "drop": spot.get("drop"),
             }
         )
     return hotspots
+
+
+def player_image(state, story):
+    """The player's sprite for this state (e.g. street clothes or tennis
+    outfit), from the top-level `player` list in the story. None if unset."""
+    entry = first_matching_entry(story.get("player", []), state, story)
+    return entry["image"] if entry is not None else None
+
+
+def _message_source(state, action_id, story):
+    """The action itself if it is allowed, otherwise its matching blocked
+    text entry. None if there is no such action or no blocked text."""
+    if state.ending is not None:
+        return None
+    action = find_action(story, state.scene, action_id)
+    if action is None:
+        return None
+    if conditions_met(state, action.get("requires", {}), story):
+        return action
+    return first_matching_entry(action.get("blocked_text", []), state, story)
+
+
+def speaker_anchor(state, action_id, story):
+    """Where the speech bubble for this action's message points to (above the
+    speaker's head), or None if it is not spoken by someone in the picture.
+    Call it with the state from *before* the action."""
+    source = _message_source(state, action_id, story)
+    return source.get("speaker_at") if source is not None else None
 
 
 def speaker_for(state, action_id, story):
@@ -176,15 +209,8 @@ def speaker_for(state, action_id, story):
     matching blocked text. None for objects, narration and unknown actions.
     Call it with the state from *before* the action.
     """
-    if state.ending is not None:
-        return None
-    action = find_action(story, state.scene, action_id)
-    if action is None:
-        return None
-    if conditions_met(state, action.get("requires", {}), story):
-        return action.get("speaker")
-    entry = first_matching_entry(action.get("blocked_text", []), state, story)
-    return entry.get("speaker") if entry is not None else None
+    source = _message_source(state, action_id, story)
+    return source.get("speaker") if source is not None else None
 
 
 def apply_action(state, action_id, story):

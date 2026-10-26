@@ -1,6 +1,19 @@
 {
   "title": "Plot Twist",
   "start_scene": "grounds",
+  "player": [
+    {
+      "when": {
+        "flags": [
+          "changed"
+        ]
+      },
+      "image": "sprites/player.svg"
+    },
+    {
+      "image": "sprites/player_street.svg"
+    }
+  ],
   "items": {
     "key": {
       "name": "Rusty key",
@@ -185,6 +198,10 @@
           "id": "register",
           "label": "Register for the tournament",
           "speaker": "Woman at the desk",
+          "speaker_at": [
+            160,
+            66
+          ],
           "requires": {
             "not_flags": [
               "registered"
@@ -209,6 +226,10 @@
           "id": "ask_for_racket",
           "label": "Ask for a spare racket",
           "speaker": "Woman at the desk",
+          "speaker_at": [
+            160,
+            66
+          ],
           "requires": {
             "flags": [
               "needs_racket"
@@ -236,6 +257,10 @@
           "id": "talk_office_no_racket",
           "label": "Talk to the woman at the desk",
           "speaker": "Woman at the desk",
+          "speaker_at": [
+            160,
+            66
+          ],
           "requires": {
             "flags": [
               "knows_groundskeeper"
@@ -258,6 +283,10 @@
           "id": "talk_office_after_choice",
           "label": "Talk to the woman at the desk",
           "speaker": "Woman at the desk",
+          "speaker_at": [
+            160,
+            66
+          ],
           "requires": {
             "choice_made": "racket"
           },
@@ -335,7 +364,7 @@
           },
           "icon": ":material/directions_walk:",
           "hotspot": {
-            "x": 4,
+            "x": 286,
             "y": 150,
             "w": 30,
             "h": 26,
@@ -432,8 +461,8 @@
     "groundskeeper": {
       "name": "Groundskeeper",
       "player": {
-        "x": 206,
-        "y": 106,
+        "x": 196,
+        "y": 100,
         "scale": 1.5
       },
       "texts": [
@@ -447,6 +476,10 @@
           "id": "talk_groundskeeper_first",
           "label": "Talk to the groundskeeper",
           "speaker": "Groundskeeper",
+          "speaker_at": [
+            121,
+            95
+          ],
           "requires": {
             "not_items": [
               "key"
@@ -458,10 +491,10 @@
           },
           "icon": ":material/chat:",
           "hotspot": {
-            "x": 106,
-            "y": 66,
-            "w": 56,
-            "h": 98,
+            "x": 100,
+            "y": 96,
+            "w": 42,
+            "h": 70,
             "name": "Groundskeeper"
           }
         },
@@ -469,6 +502,10 @@
           "id": "talk_groundskeeper_has_key",
           "label": "Talk to the groundskeeper",
           "speaker": "Groundskeeper",
+          "speaker_at": [
+            121,
+            95
+          ],
           "requires": {
             "items": [
               "key"
@@ -480,10 +517,10 @@
           },
           "icon": ":material/chat:",
           "hotspot": {
-            "x": 106,
-            "y": 66,
-            "w": 56,
-            "h": 98,
+            "x": 100,
+            "y": 96,
+            "w": 42,
+            "h": 70,
             "name": "Groundskeeper"
           }
         },
@@ -491,6 +528,10 @@
           "id": "talk_groundskeeper_after_choice",
           "label": "Talk to the groundskeeper",
           "speaker": "Groundskeeper",
+          "speaker_at": [
+            121,
+            95
+          ],
           "requires": {
             "choice_made": "racket"
           },
@@ -499,10 +540,10 @@
           },
           "icon": ":material/chat:",
           "hotspot": {
-            "x": 106,
-            "y": 66,
-            "w": 56,
-            "h": 98,
+            "x": 100,
+            "y": 96,
+            "w": 42,
+            "h": 70,
             "name": "Groundskeeper"
           }
         },
@@ -559,7 +600,12 @@
             "y": 84,
             "w": 52,
             "h": 72,
-            "name": "Shed door"
+            "name": "Shed door",
+            "walk_to": [
+              114,
+              100
+            ],
+            "drop": "padlock"
           }
         },
         {
@@ -611,10 +657,10 @@
           },
           "icon": ":material/search:",
           "hotspot": {
-            "x": 86,
-            "y": 54,
-            "w": 46,
-            "h": 88,
+            "x": 96,
+            "y": 96,
+            "w": 28,
+            "h": 46,
             "name": "Wilson Blade"
           }
         },
@@ -629,10 +675,10 @@
           },
           "icon": ":material/search:",
           "hotspot": {
-            "x": 136,
-            "y": 54,
-            "w": 48,
-            "h": 90,
+            "x": 156,
+            "y": 96,
+            "w": 28,
+            "h": 46,
             "name": "Old Yonex"
           }
         },
@@ -651,10 +697,10 @@
           },
           "icon": ":material/back_hand:",
           "hotspot": {
-            "x": 86,
-            "y": 54,
-            "w": 46,
-            "h": 88,
+            "x": 96,
+            "y": 96,
+            "w": 28,
+            "h": 46,
             "name": "Wilson Blade"
           }
         },
@@ -673,10 +719,10 @@
           },
           "icon": ":material/back_hand:",
           "hotspot": {
-            "x": 136,
-            "y": 54,
-            "w": 48,
-            "h": 90,
+            "x": 156,
+            "y": 96,
+            "w": 28,
+            "h": 46,
             "name": "Old Yonex"
           }
         },

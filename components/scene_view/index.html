@@ -3,14 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <!--
-      Scene view for Plot Twist (specs/point-and-click.md).
+      Scene view for Plot Twist (specs/point-and-click.md, specs/scene-polish.md).
 
-      Shows the scene SVG, puts clickable hotspots with name labels on top,
-      and shows the last message in a dialogue box. When a hotspot is
-      clicked, it reports {action, nonce} back to Python. It knows nothing
-      about the rules: Python decides which hotspots exist, what a click does
-      and what the message is. Talks to Streamlit with its plain postMessage
-      protocol, so no build step or extra package is needed.
+      Shows the scene SVG with clickable hotspots and name labels, plays short
+      animations (walk to a spot, drop an element), and shows the last message:
+      speech in a bubble above the speaker, narration and object texts in the
+      text box. When a hotspot is clicked it reports {action, nonce} back to
+      Python. It knows nothing about the rules: Python decides which hotspots
+      exist, whether they are allowed, what a click does and what the message
+      is. Talks to Streamlit with its plain postMessage protocol, so no build
+      step or extra package is needed.
     -->
     <style>
       html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
@@ -22,14 +24,16 @@
       .spot { fill: transparent; stroke: none; cursor: pointer; }
       .label rect { fill: rgba(45, 58, 42, 0.82); transition: fill 0.12s; }
       .label text { fill: #ffffff; font: bold 7px monospace; }
-      .label { pointer-events: none; }
+      .label { pointer-events: none; transition: opacity 0.2s; }
       .label.hot rect { fill: #d9743a; }
+      .busy .label, .busy .exit-badge, .busy .exit-arrow,
+      .talking .label, .talking .exit-badge, .talking .exit-arrow { opacity: 0; }
 
-      .exit-badge { fill: rgba(45, 58, 42, 0.8); pointer-events: none; transition: fill 0.12s; }
+      .exit-badge { fill: rgba(45, 58, 42, 0.8); pointer-events: none; transition: fill 0.12s, opacity 0.2s; }
       .exit-badge.hot { fill: #d9743a; }
-      .exit-arrow { fill: #ffffff; font: bold 12px monospace; pointer-events: none; }
+      .exit-arrow { fill: #ffffff; font: bold 12px monospace; pointer-events: none; transition: opacity 0.2s; }
 
-      #menu { position: absolute; display: none; min-width: 160px; z-index: 3;
+      #menu { position: absolute; display: none; min-width: 160px; z-index: 5;
               background: #fbf7ee; border: 2px solid #2d3a2a; border-radius: 4px;
               padding: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); }
       #menu button { display: block; width: 100%; margin: 3px 0; padding: 7px 10px;
@@ -37,8 +41,11 @@
                      color: #ffffff; background: #d9743a; border: 0; border-radius: 3px; }
       #menu button:hover { background: #c4642f; }
 
-      /* Dialogue box at the bottom of the image */
-      #dialog { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 2;
+      /* While a conversation runs, a click anywhere moves it on */
+      #catcher { position: absolute; inset: 0; z-index: 2; display: none; cursor: pointer; }
+
+      /* Text box at the bottom of the image (narration, objects) */
+      #dialog { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 3;
                 display: none; cursor: pointer;
                 background: rgba(251, 247, 238, 0.97); color: #2d3a2a;
                 border: 3px solid #2d3a2a; border-radius: 6px;
@@ -47,8 +54,23 @@
       #speaker { position: absolute; top: -13px; left: 12px; display: none;
                  background: #d9743a; color: #ffffff; border: 2px solid #2d3a2a;
                  border-radius: 4px; padding: 1px 8px; font: bold 12px monospace; }
-      #more { position: absolute; right: 10px; bottom: 4px; font: bold 11px monospace;
-              color: #d9743a; animation: blink 0.9s steps(2, start) infinite; }
+
+      /* Speech bubble above the speaker */
+      #bubble { position: absolute; z-index: 3; display: none; cursor: pointer;
+                max-width: 58%; transform: translate(-50%, -100%);
+                background: #ffffff; color: #2d3a2a; border: 3px solid #2d3a2a;
+                border-radius: 12px; padding: 8px 12px 14px;
+                font: 15px/1.4 sans-serif; box-shadow: 0 3px 0 rgba(45, 58, 42, 0.3); }
+      #bubble::after, #bubble::before { content: ""; position: absolute; left: var(--tail, 50%);
+                transform: translateX(-50%); border-style: solid; }
+      #bubble::before { bottom: -15px; border-width: 13px 9px 0 9px;
+                border-color: #2d3a2a transparent transparent transparent; }
+      #bubble::after { bottom: -10px; border-width: 10px 6px 0 6px;
+                border-color: #ffffff transparent transparent transparent; }
+      #bubble-name { font: bold 11px monospace; color: #d9743a; margin-bottom: 2px; }
+
+      .more { position: absolute; right: 10px; bottom: 3px; font: bold 11px monospace;
+              color: #d9743a; animation: blink 0.9s steps(2, start) infinite; display: none; }
       @keyframes blink { to { visibility: hidden; } }
     </style>
   </head>
@@ -57,24 +79,23 @@
       <div id="scene"></div>
       <svg id="overlay" xmlns="http://www.w3.org/2000/svg"></svg>
       <div id="menu"></div>
-      <div id="dialog"><div id="speaker"></div><div id="text"></div><div id="more">▼</div></div>
+      <div id="catcher"></div>
+      <div id="dialog"><div id="speaker"></div><div id="dialog-text"></div><div class="more">▼</div></div>
+      <div id="bubble"><div id="bubble-name"></div><div id="bubble-text"></div><div class="more">▼</div></div>
     </div>
 
     <script>
       const SVG_NS = "http://www.w3.org/2000/svg";
-      const wrap = document.getElementById("wrap");
-      const scene = document.getElementById("scene");
-      const overlay = document.getElementById("overlay");
-      const menu = document.getElementById("menu");
-      const dialog = document.getElementById("dialog");
-      const speakerEl = document.getElementById("speaker");
-      const textEl = document.getElementById("text");
-      const moreEl = document.getElementById("more");
       const TYPE_DELAY_MS = 22;
+      const $ = id => document.getElementById(id);
+      const wrap = $("wrap"), scene = $("scene"), overlay = $("overlay"), menu = $("menu");
+      const catcher = $("catcher"), dialog = $("dialog"), bubble = $("bubble");
 
+      let args = null;          // last render arguments from Python
       let lastScene = "";
       let shownMessageId = null;
-      let typing = null; // {timer, finish}
+      let busy = false;         // an animation is playing: ignore clicks
+      let conversation = null;  // {pieces, index, typing}
 
       // --- Streamlit protocol ------------------------------------------------
       function send(type, data) {
@@ -91,6 +112,7 @@
       function updateHeight() {
         send("streamlit:setFrameHeight", { height: wrap.offsetHeight });
       }
+      const units = () => wrap.offsetWidth / args.width;   // pixels per SVG unit
 
       // --- Menu for hotspots with several actions ------------------------------
       function pointIn(event) {
@@ -103,7 +125,7 @@
         group.forEach(spot => {
           const button = document.createElement("button");
           button.textContent = spot.label;
-          button.addEventListener("click", e => { e.stopPropagation(); report(spot.id); });
+          button.addEventListener("click", e => { e.stopPropagation(); activate(spot); });
           menu.appendChild(button);
         });
         menu.style.display = "block";
@@ -116,7 +138,40 @@
       }
       wrap.addEventListener("click", hideMenu);
 
-      // --- Dialogue box --------------------------------------------------------
+      // --- Animations before an action -----------------------------------------
+      const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+      async function activate(spot) {
+        if (busy) return;
+        hideMenu();
+        // Only allowed actions animate; blocked ones just show their message
+        if (spot.allowed && (spot.walk_to || spot.drop)) {
+          busy = true;
+          wrap.classList.add("busy");
+          endConversation();
+          const player = scene.querySelector("#player");
+          if (spot.walk_to && player && args.player) {
+            const dx = spot.walk_to[0] - args.player.x;
+            const dy = spot.walk_to[1] - args.player.y;
+            player.style.transition = "transform 0.8s ease-in-out";
+            player.style.transform = `translate(${dx}px, ${dy}px)`;
+            await wait(900);
+          }
+          const target = spot.drop && scene.querySelector("#" + CSS.escape(spot.drop));
+          if (target) {
+            target.style.transformBox = "fill-box";
+            target.style.transformOrigin = "center";
+            target.style.transition = "transform 0.6s cubic-bezier(.5,0,1,1), opacity 0.6s";
+            target.style.transform = "translate(0px, 46px) rotate(35deg)";
+            target.style.opacity = "0";
+            await wait(750);
+          }
+          busy = false;   // the new scene from Python resets everything
+        }
+        report(spot.id);
+      }
+
+      // --- Typing text ---------------------------------------------------------
       // Split "*word*" into italic segments; everything else is plain text.
       function segments(text) {
         return text.split(/(\*[^*]+\*)/).filter(Boolean).map(part =>
@@ -124,67 +179,124 @@
             ? { text: part.slice(1, -1), em: true }
             : { text: part, em: false });
       }
-      function stopTyping() {
-        if (typing) { clearTimeout(typing.timer); typing = null; }
-      }
-      function showMessage(message) {
-        stopTyping();
-        textEl.innerHTML = "";
-        speakerEl.textContent = message.speaker || "";
-        speakerEl.style.display = message.speaker ? "block" : "none";
-        dialog.style.display = "block";
 
-        const parts = segments(message.text).map(seg => {
+      // Write text into `target`. Letter by letter if `animate`, based on
+      // elapsed time so it catches up when the browser slows timers down.
+      // Returns {finish, done} to control it.
+      function typeText(target, text, animate, onDone) {
+        target.innerHTML = "";
+        const parts = segments(text).map(seg => {
           const span = document.createElement(seg.em ? "em" : "span");
           span.style.whiteSpace = "pre-wrap";
-          textEl.appendChild(span);
+          target.appendChild(span);
           return { span: span, text: seg.text };
         });
-        const writeAll = () => parts.forEach(p => { p.span.textContent = p.text; });
-
-        if (!message.speaker) {           // objects and narration: all at once
-          writeAll();
-          moreEl.style.display = "block";
-          return;
-        }
-        moreEl.style.display = "none";    // a person speaks: letter by letter
-
-        // How many letters should be visible after `ms` milliseconds. Based on
-        // elapsed time, so the text catches up if the browser slows timers down.
+        const show = count => {
+          let left = count;
+          parts.forEach(p => { p.span.textContent = p.text.slice(0, Math.max(0, left)); left -= p.text.length; });
+        };
         const full = parts.map(p => p.text).join("");
-        const showAt = [];                // showAt[i] = time when letter i appears
+        const state = { done: false, timer: null };
+        state.finish = () => { clearTimeout(state.timer); show(full.length); state.done = true; onDone(); };
+        if (!animate) { state.finish(); return state; }
+
+        const showAt = [];
         let t = 0;
         for (const ch of full) {
           showAt.push(t);
           t += ".!?".includes(ch) ? TYPE_DELAY_MS * 8 : TYPE_DELAY_MS;
         }
-        const render = count => {
-          let left = count;
-          parts.forEach(p => {
-            p.span.textContent = p.text.slice(0, Math.max(0, left));
-            left -= p.text.length;
-          });
-        };
         const start = performance.now();
         const step = () => {
           const elapsed = performance.now() - start;
           let count = 0;
           while (count < showAt.length && showAt[count] <= elapsed) count += 1;
-          render(count);
-          if (count >= full.length) { typing = null; moreEl.style.display = "block"; return; }
-          typing.timer = setTimeout(step, TYPE_DELAY_MS);
-        };
-        typing = {
-          timer: null,
-          finish: () => { stopTyping(); writeAll(); moreEl.style.display = "block"; },
+          show(count);
+          if (count >= full.length) { state.done = true; onDone(); return; }
+          state.timer = setTimeout(step, TYPE_DELAY_MS);
         };
         step();
+        return state;
       }
-      dialog.addEventListener("click", e => {
-        e.stopPropagation();
-        if (typing) typing.finish();      // first click: show the full text
-        else dialog.style.display = "none"; // second click: close
-      });
+
+      // --- Conversation: pieces of narration (box) and speech (bubble) ----------
+      // Text between double quotes is speech, the rest is narration.
+      function splitSpeech(text) {
+        return text.split('"').map((part, i) => ({ text: part.trim(), speech: i % 2 === 1 }))
+                   .filter(piece => piece.text.length > 0);
+      }
+
+      function endConversation() {
+        if (conversation && conversation.typing) clearTimeout(conversation.typing.timer);
+        conversation = null;
+        wrap.classList.remove("talking");
+        dialog.style.display = "none";
+        bubble.style.display = "none";
+        catcher.style.display = "none";
+      }
+
+      function placeBubble(anchor) {
+        const u = units();
+        bubble.style.display = "block";
+        const half = bubble.offsetWidth / 2;
+        const wantX = anchor[0] * u;
+        const x = Math.min(Math.max(wantX, half + 4), wrap.offsetWidth - half - 4);
+        bubble.style.left = x + "px";
+        bubble.style.top = (anchor[1] * u - 14) + "px";
+        // Keep the tail pointing at the speaker even when the bubble is moved
+        bubble.style.setProperty("--tail", (half + wantX - x) + "px");
+      }
+
+      function showPiece() {
+        const c = conversation;
+        const piece = c.pieces[c.index];
+        document.querySelectorAll(".more").forEach(el => (el.style.display = "none"));
+        const markDone = box => () => { box.querySelector(".more").style.display = "block"; };
+
+        if (piece.speech && c.anchor) {
+          dialog.style.display = "none";
+          $("bubble-name").textContent = c.speaker || "";
+          $("bubble-name").style.display = c.speaker ? "block" : "none";
+          $("bubble-text").textContent = piece.text;      // measure the full size first
+          placeBubble(c.anchor);
+          c.typing = typeText($("bubble-text"), piece.text, true, markDone(bubble));
+        } else {
+          bubble.style.display = "none";
+          // Spoken without a bubble (e.g. the steward): name tag + letter by letter
+          const spoken = piece.speech || (c.speaker && !c.anchor);
+          $("speaker").textContent = c.speaker || "";
+          $("speaker").style.display = spoken && c.speaker ? "block" : "none";
+          dialog.style.display = "block";
+          const text = piece.speech && !c.anchor ? `"${piece.text}"` : piece.text;
+          c.typing = typeText($("dialog-text"), text, Boolean(spoken), markDone(dialog));
+        }
+      }
+
+      function advance(event) {
+        if (event) event.stopPropagation();
+        const c = conversation;
+        if (!c) return;
+        if (c.typing && !c.typing.done) { c.typing.finish(); return; }   // show the full piece
+        c.index += 1;
+        if (c.index >= c.pieces.length) endConversation(); else showPiece();
+      }
+      [catcher, dialog, bubble].forEach(el => el.addEventListener("click", advance));
+
+      function startConversation(message) {
+        endConversation();
+        let pieces;
+        if (message.anchor) {
+          pieces = splitSpeech(message.text);                 // narration and speech in turns
+        } else {
+          pieces = [{ text: message.text, speech: false }];   // one piece in the text box
+        }
+        if (!pieces.length) return;
+        conversation = { pieces: pieces, index: 0, typing: null,
+                         speaker: message.speaker, anchor: message.anchor };
+        catcher.style.display = "block";
+        wrap.classList.add("talking");
+        showPiece();
+      }
 
       // --- Drawing the scene ---------------------------------------------------
       function el(name, attrs) {
@@ -203,8 +315,7 @@
         // Default: centred above the hotspot; inside it if there is no room
         let [cx, cy] = spot.label_at || [spot.x + spot.w / 2, spot.y - 4];
         if (!spot.label_at && cy < 10) cy = spot.y + 10;
-        const textWidth = text.getComputedTextLength();
-        const padX = 3, boxW = textWidth + padX * 2, boxH = 10;
+        const boxW = text.getComputedTextLength() + 6, boxH = 10;
         cx = Math.min(Math.max(cx, boxW / 2 + 2), width - boxW / 2 - 2);
         text.setAttribute("x", cx);
         text.setAttribute("y", cy);
@@ -213,8 +324,10 @@
         return g;
       }
 
-      function drawScene(args) {
+      function drawScene() {
         hideMenu();
+        wrap.classList.remove("busy");
+        busy = false;
         scene.innerHTML = args.svg;
         overlay.setAttribute("viewBox", `0 0 ${args.width} ${args.height}`);
         overlay.innerHTML = "";
@@ -251,7 +364,8 @@
           }
           rectEl.addEventListener("click", e => {
             e.stopPropagation();
-            if (group.length === 1) report(s.id);
+            if (busy) return;
+            if (group.length === 1) activate(s);
             else showMenu(e, group);
           });
           spots.push(rectEl);
@@ -260,20 +374,20 @@
         spots.forEach(rectEl => overlay.appendChild(rectEl));
       }
 
-      function render(args) {
+      function render(newArgs) {
+        args = newArgs;
         const sceneKey = JSON.stringify([args.svg, args.hotspots]);
         if (sceneKey !== lastScene) {
           lastScene = sceneKey;
-          drawScene(args);
+          drawScene();
         }
         const message = args.message;
         if (!message) {
-          stopTyping();
-          dialog.style.display = "none";
+          endConversation();
           shownMessageId = null;
         } else if (message.id !== shownMessageId) {
           shownMessageId = message.id;
-          showMessage(message);
+          startConversation(message);
         }
         requestAnimationFrame(updateHeight);
       }

@@ -53,20 +53,25 @@ def read_asset(path):
 
 
 def scene_svg_with_player(state):
-    """The scene image as SVG text, with the player figure drawn into it."""
+    """The scene image as SVG text, with the player figure drawn into it.
+
+    The figure's outfit depends on the state (street clothes or tennis kit).
+    It is wrapped in <g id="player"> so the component can let it walk.
+    """
     svg = read_asset(logic.scene_image(state, story)).strip()
     player = story["scenes"][state.scene].get("player")
-    if player is None:
+    sprite_path = logic.player_image(state, story)
+    if player is None or sprite_path is None:
         return svg
     scale = player["scale"]
-    sprite = read_asset("sprites/player.svg").strip().replace(
+    sprite = read_asset(sprite_path).strip().replace(
         "<svg ",
         f'<svg x="{player["x"]}" y="{player["y"]}" '
         f'width="{PLAYER_W * scale}" height="{PLAYER_H * scale}" ',
         1,
     )
     head, _, _ = svg.rpartition("</svg>")
-    return head + sprite + "</svg>"
+    return head + '<g id="player">' + sprite + "</g></svg>"
 
 
 def action_icon(action):
@@ -91,6 +96,7 @@ def handle_action(action_id):
     """Check the action with logic.py and save only if it was accepted."""
     before = st.session_state.state
     speaker = logic.speaker_for(before, action_id, story)
+    anchor = logic.speaker_anchor(before, action_id, story)
     new_state, accepted, message = logic.apply_action(before, action_id, story)
     if accepted:
         save_game(DB_PATH, new_state)
@@ -101,6 +107,7 @@ def handle_action(action_id):
         "id": st.session_state.message_count,
         "text": message,
         "speaker": speaker,
+        "anchor": anchor,  # where the speech bubble points to, or None
     }
 
 
@@ -183,6 +190,7 @@ message = feedback if feedback and feedback["text"] else None
 scene_view(
     svg=scene_svg_with_player(state),
     hotspots=logic.scene_hotspots(state, story),
+    player=scene.get("player"),  # start position, for the walk animation
     message=message,
     width=IMAGE_W,
     height=IMAGE_H,
