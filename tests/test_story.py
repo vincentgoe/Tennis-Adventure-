@@ -75,3 +75,14 @@ def test_every_referenced_image_exists():
     images = [image for image in _referenced_images(story) if image is not None]
     missing = [image for image in images if not (ASSETS / image).is_file()]
     assert missing == []
+
+
+def test_every_scene_ending_and_player_image_is_animated():
+    """specs/animations.md: everything moves a little."""
+    story = load_story()
+    images = {entry["image"] for scene in story["scenes"].values() for entry in scene["texts"]}
+    images |= {page["image"] for ending in story["endings"].values() for page in ending["pages"]}
+    images.add("sprites/player.svg")
+    still = [image for image in sorted(images)
+             if "<animate" not in (ASSETS / image).read_text(encoding="utf-8")]
+    assert still == []
