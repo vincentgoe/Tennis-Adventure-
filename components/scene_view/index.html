@@ -409,12 +409,7 @@
               class: "exit-arrow", x: s.x + s.w / 2, y: s.y + s.h / 2 + 4, "text-anchor": "middle" });
             arrow.textContent = ARROWS[direction] || "▶";
             overlay.appendChild(arrow);
-            // Where the exit leads, shown on hover above the arrow
-            const label = s.name ? addLabel({ ...s, y: s.y + s.h / 2 - 9 }, args.width) : null;
-            marker = { classList: {
-              add: c => { badge.classList.add(c); if (label) label.classList.add(c); },
-              remove: c => { badge.classList.remove(c); if (label) label.classList.remove(c); },
-            } };
+            marker = badge;   // exits show only the arrow, no name (author feedback)
           } else if (s.name) {
             marker = addLabel(s, args.width);
           }

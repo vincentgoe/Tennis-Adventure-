@@ -37,8 +37,8 @@ exploring takes a little more effort.
 - The old screen `grounds` is replaced by `entrance` and `main_path`. The old
   scene `groundskeeper` becomes `court_2`.
 - Exits are arrows at the edge pointing in the walking direction: ◀ ▶ ▲ ▼. A
-  hotspot marker may set a `direction`. On hover, an exit shows where it leads
-  (e.g. "Main path").
+  hotspot marker may set a `direction`. Exits show only the arrow, without a
+  name (author feedback).
 
 ### Rules (unchanged in substance, only where they sit)
 
