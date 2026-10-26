@@ -144,7 +144,7 @@ name from `story.json`.
 - [x] Persistence tests use a temporary database (`tmp_path`).
 - [x] Manual check: start the app, play from the start to the racket choice,
       stop the app (Ctrl+C), start it again, and see the same state and routes.
-- [ ] Committed on `first-feature`, pushed, reviewed, merged into `main`.
+- [x] Committed on `first-feature`, pushed, reviewed, merged into `main`.
 
 ## Decisions
 
