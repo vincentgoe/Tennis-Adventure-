@@ -271,3 +271,15 @@ def test_the_stranger_scene_has_timed_captions():
     ]
     assert captions[0]["at"] == 0
     assert captions[1]["at"] > captions[0]["at"]
+
+
+def test_ending_b_ends_with_an_end_screen():
+    """specs/end-scene-polish.md: after the ceremony, Ending B closes with
+    'THE END' like Ending A."""
+    story = load_story()
+    pages = story["endings"]["B"]["pages"]
+    assert len(pages) >= 2
+    last = pages[-1]
+    assert last["name"] == "The end"
+    svg = (ASSETS / last["image"]).read_text(encoding="utf-8")
+    assert "THE END" in svg

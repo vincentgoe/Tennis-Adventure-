@@ -34,10 +34,19 @@ should give the player time to read.
 - **Award ceremony ground:** a meadow with a square of stone tiles on which
   the podium stands (evening sky stays).
 
+### End screen for Ending B (author request)
+
+- After the award ceremony page, Ending B gets a last page "The end": the
+  empty Center Court at sunset, the player sitting alone on the players'
+  bench with the Wilson next to them; after a few seconds "THE END" fades in
+  (like Ending A). The page has no description text. Shown in the chosen
+  outfit.
+
 ## Done when
 
-- [ ] New test written first and green: the stranger page has the two
-      captions above, in order, the first at 0 s.
+- [ ] New tests written first and green: the stranger page has the two
+      captions above, in order, the first at 0 s; Ending B ends with an end
+      screen page.
 - [ ] All existing tests are still green and unchanged.
 - [ ] Manual check: description boxes in scenes and endings, the ceremony
       ground, and the stranger scene timing and captions.
