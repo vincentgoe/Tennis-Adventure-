@@ -49,4 +49,4 @@ their character looks.
 - [x] All existing tests are still green and unchanged.
 - [x] Manual check: choose each outfit once and see it in the scenes, the
       match and the ending.
-- [ ] Committed on `outfit-choice`, pushed, reviewed, merged into `main`.
+- [x] Committed on `outfit-choice`, pushed, reviewed, merged into `main`.

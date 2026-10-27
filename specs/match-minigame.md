@@ -141,4 +141,4 @@ The game reports only `win` or `loss`. `logic.py` decides what it means:
       the snapping string, win round 3 and the final with the Yonex; try losing
       a must-win round (replay / give up) and winning a must-lose round
       (blackout).
-- [ ] Committed on `match-minigame`, pushed, reviewed, merged into `main`.
+- [x] Committed on `match-minigame`, pushed, reviewed, merged into `main`.

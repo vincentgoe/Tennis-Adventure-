@@ -50,4 +50,4 @@ should give the player time to read.
 - [x] All existing tests are still green and unchanged.
 - [x] Manual check: description boxes in scenes and endings, the ceremony
       ground, and the stranger scene timing and captions.
-- [ ] Committed on `end-scene-polish`, pushed, reviewed, merged into `main`.
+- [x] Committed on `end-scene-polish`, pushed, reviewed, merged into `main`.

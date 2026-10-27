@@ -36,4 +36,4 @@ time visible, and the award ceremony after the final happens in the evening.
 - [x] All existing tests are still green and unchanged.
 - [x] Manual check: the sun moves right after each match; the ceremony is in
       evening light.
-- [ ] Committed on `daylight`, pushed, reviewed, merged into `main`.
+- [x] Committed on `daylight`, pushed, reviewed, merged into `main`.
