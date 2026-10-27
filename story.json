@@ -1200,6 +1200,29 @@
               "image": "endings/ceremony_loss_pink.svg"
             }
           ]
+        },
+        {
+          "name": "The end",
+          "text": "",
+          "image": "endings/end_b.svg",
+          "images": [
+            {
+              "when": {
+                "flags": [
+                  "outfit_black"
+                ]
+              },
+              "image": "endings/end_b_black.svg"
+            },
+            {
+              "when": {
+                "flags": [
+                  "outfit_pink"
+                ]
+              },
+              "image": "endings/end_b_pink.svg"
+            }
+          ]
         }
       ]
     }
