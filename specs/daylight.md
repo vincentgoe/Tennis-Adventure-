@@ -28,12 +28,12 @@ time visible, and the award ceremony after the final happens in the evening.
 
 ## Done when
 
-- [ ] New tests written first and green:
+- [x] New tests written first and green:
   - `day_progress` is 0 at the start, grows with each match and is 1 after the
     final.
   - Every scene with a `sky` block has a horizon inside the image, and its
     images contain the sky the sun is drawn behind.
-- [ ] All existing tests are still green and unchanged.
-- [ ] Manual check: the sun moves right after each match; the ceremony is in
+- [x] All existing tests are still green and unchanged.
+- [x] Manual check: the sun moves right after each match; the ceremony is in
       evening light.
 - [ ] Committed on `daylight`, pushed, reviewed, merged into `main`.

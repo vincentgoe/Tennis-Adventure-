@@ -303,12 +303,25 @@ with main_col:
         ending = story["endings"][state.ending]
         pages = ending["pages"]
         index = min(st.session_state.get("ending_page", 0), len(pages) - 1)
-        if index == 0 and st.session_state.feedback and st.session_state.feedback["text"]:
-            st.markdown(st.session_state.feedback["text"])
         page = pages[index]
         st.header(page["name"])
-        show_image(logic.page_image(state, page, story), width=900)
-        st.markdown(page["text"])
+        # The result of the final, centered on the first page
+        final_text = None
+        if index == 0 and st.session_state.feedback and st.session_state.feedback["text"]:
+            final_text = dict(st.session_state.feedback, position="center")
+        scene_view(
+            svg=read_asset(logic.page_image(state, page, story)).strip(),
+            hotspots=[],
+            player=None,
+            message=final_text,
+            description=None if page.get("captions") else page["text"],
+            captions=page.get("captions"),
+            captions_until=page.get("captions_until"),
+            width=IMAGE_W,
+            height=IMAGE_H,
+            key=f"ending_view_{state.ending}_{index}",   # a new page restarts its animation
+            default=None,
+        )
         if index < len(pages) - 1:
             st.button(ui["continue"], icon=":material/arrow_forward:", type="primary",
                       on_click=next_ending_page)
@@ -365,6 +378,7 @@ with main_col:
                   for h in logic.scene_hotspots(state, story)],
         player=player_position(state),  # where the player stands now, for walking
         message=message,
+        description=logic.scene_text(state, story),   # shown top left in the picture
         width=IMAGE_W,
         height=IMAGE_H,
         key="scene_view",
@@ -372,7 +386,6 @@ with main_col:
         default=None,
     )
     st.caption("Click on things in the picture. Arrows lead back.")
-    st.markdown(logic.scene_text(state, story))
 
     with st.expander("All actions", icon=":material/list:"):
         for action_id in logic.available_actions(state, story):

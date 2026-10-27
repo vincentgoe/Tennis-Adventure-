@@ -39,14 +39,14 @@ their character looks.
 
 ## Done when
 
-- [ ] New tests written first and green:
+- [x] New tests written first and green:
   - `page_image` returns the matching variant, or the default image.
   - `player_image` returns the black / pink sprite after choosing them.
   - `scene_hotspots` passes an action's `preview`; every outfit action has
     an existing preview image.
   - In `story.json`, the three outfit actions exist, each sets `changed`
     and exactly one outfit flag, and every page image variant exists.
-- [ ] All existing tests are still green and unchanged.
-- [ ] Manual check: choose each outfit once and see it in the scenes, the
+- [x] All existing tests are still green and unchanged.
+- [x] Manual check: choose each outfit once and see it in the scenes, the
       match and the ending.
 - [ ] Committed on `outfit-choice`, pushed, reviewed, merged into `main`.
