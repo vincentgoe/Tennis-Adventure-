@@ -257,3 +257,17 @@ def test_only_the_center_court_shows_the_story_box_in_the_middle():
     centered = [sid for sid, scene in story["scenes"].items()
                 if scene.get("dialog_position") == "center"]
     assert centered == ["court"]
+
+
+def test_the_stranger_scene_has_timed_captions():
+    """specs/end-scene-polish.md: two captions given by the author."""
+    story = load_story()
+    page = next(p for p in story["endings"]["A"]["pages"] if p.get("captions"))
+    captions = page["captions"]
+    assert [c["text"] for c in captions] == [
+        "As the crowd drifts away, a stranger in a cap walks up to you.",
+        "He turns it slowly in his hands, his thumb resting on the faded letters "
+        "on the frame. A smile spreads across his face.",
+    ]
+    assert captions[0]["at"] == 0
+    assert captions[1]["at"] > captions[0]["at"]
