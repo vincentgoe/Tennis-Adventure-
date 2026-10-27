@@ -60,6 +60,15 @@ baseball and golf timing bars):
   `yellow` (zone widths as fractions of the bar). `window` is the time after
   the contact point during which a swing still counts.
 
+### Version 3 (author feedback after the second play test)
+
+- The area to stand in after the bounce is smaller (`reach` about one third
+  smaller in every round).
+- The timing line sweeps more slowly (`bar_speed` about 30 % lower).
+- **One swing per incoming ball**, like in real tennis: the first press of
+  space counts. Pressing before the bounce is "TOO EARLY" and the ball passes;
+  mashing space no longer gets around the timing.
+
 ### Difficulty and story events (story content)
 
 Each match outcome in `story.json` gets a `game` block with the settings for

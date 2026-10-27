@@ -215,8 +215,10 @@
       function trySwing() {
         if (!started || finished || blackout || snap) return;
         player.swing = 0.25;
-        if (!hittable() || ball.swung) return;          // before the bounce: just a practice swing
+        // One swing per incoming ball, like in real tennis: the first press counts
+        if (!ball || ball.from !== "o" || ball.hit || ball.swung) return;
         ball.swung = true;
+        if (!hittable()) { show("TOO EARLY", "#ff8a7a", 0.8); return; }   // before the bounce
         if (distanceToMarker() > cfg.reach) { show("TOO FAR", "#ff8a7a", 0.8); return; }
 
         const zone = barZone(barPosition());
