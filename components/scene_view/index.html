@@ -77,6 +77,9 @@
                 border: 3px solid #fbf7ee; border-radius: 4px;
                 box-shadow: 0 0 0 3px #111111;
                 padding: 16px 18px 14px; font-size: 11px; line-height: 2; }
+      /* Centered variant (e.g. the Center Court): middle of the picture, more transparent */
+      #dialog.center { left: 50%; right: auto; bottom: auto; top: 50%; width: 72%;
+                       transform: translate(-50%, -50%); background: rgba(12, 12, 12, 0.68); }
       #speaker { position: absolute; top: -14px; left: 12px; display: none;
                  background: #d9743a; color: #ffffff; border: 2px solid #fbf7ee;
                  border-radius: 3px; padding: 3px 8px; font-size: 9px; }
@@ -363,6 +366,7 @@
         if (!pieces.length) return;
         conversation = { pieces: pieces, index: 0, typing: null,
                          speaker: message.speaker, anchor: message.anchor };
+        dialog.classList.toggle("center", message.position === "center");
         catcher.style.display = "block";
         wrap.classList.add("talking");
         if (message.closeup_svg) {           // item reveal behind the text box

@@ -355,6 +355,9 @@ with main_col:
     # The last message is shown in the dialogue box inside the scene image
     feedback = st.session_state.feedback
     message = feedback if feedback and feedback["text"] else None
+    if message:
+        # e.g. the Center Court shows its story box in the middle of the picture
+        message = dict(message, position=scene.get("dialog_position", "bottom"))
 
     scene_view(
         svg=scene_svg_with_player(state),
