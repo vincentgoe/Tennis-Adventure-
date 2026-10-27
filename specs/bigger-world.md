@@ -80,11 +80,11 @@ corrected explicitly (not weakened), with reference to this spec:
 
 ## Done when
 
-- [ ] New tests written first and green: every screen is reachable in the
+- [x] New tests written first and green: every screen is reachable in the
       intended order from a new game, blocked exits show their existing texts,
       the groundskeeper is on Court 2 only after the hint, both endings are
       still reachable.
-- [ ] The two corrected story tests are green; all other existing tests are
+- [x] The two corrected story tests are green; all other existing tests are
       unchanged and green.
-- [ ] Manual check: play from the start to an ending through all five screens.
+- [x] Manual check: play from the start to an ending through all five screens.
 - [ ] Committed on `bigger-world`, pushed, reviewed, merged into `main`.
