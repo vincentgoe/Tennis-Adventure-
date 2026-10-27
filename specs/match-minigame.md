@@ -69,6 +69,13 @@ baseball and golf timing bars):
   space counts. Pressing before the bounce is "TOO EARLY" and the ball passes;
   mashing space no longer gets around the timing.
 
+### Version 4 (author feedback)
+
+- Round 3 with the Wilson Blade is easier, close to round 1, so the player
+  believes the new racket can win (slower opponent with more errors, slower
+  line, wider zones, larger reach). The final with the Wilson stays extremely
+  hard.
+
 ### Difficulty and story events (story content)
 
 Each match outcome in `story.json` gets a `game` block with the settings for

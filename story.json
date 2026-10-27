@@ -1041,16 +1041,16 @@
             "result": "win",
             "text": "The Wilson feels light and fast in your hand. It isn't easy, but you win the match. Next up: the final.",
             "game": {
-              "opponent_speed": 85,
-              "opponent_reaction": 0.25,
-              "opponent_error": 0.12,
-              "ball_speed": 1.0,
-              "window": 0.25,
-              "reach": 10.4,
+              "opponent_speed": 62,
+              "opponent_reaction": 0.38,
+              "opponent_error": 0.22,
+              "ball_speed": 0.88,
+              "window": 0.32,
+              "reach": 13.0,
               "opponent_aim": 0.5,
-              "bar_speed": 1.05,
-              "green": 0.15,
-              "yellow": 0.22
+              "bar_speed": 0.8,
+              "green": 0.21,
+              "yellow": 0.25
             }
           }
         ]
