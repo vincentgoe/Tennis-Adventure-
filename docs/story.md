@@ -43,7 +43,15 @@ never mentioned.
   disappears, and the shed is empty afterwards.
 - Right after the choice, a message says the player must hurry because the next
   match starts soon.
-- Inspecting is optional and is **not** remembered.
+- Inspecting is optional and is **not** remembered. It shows a spinning
+  close-up of the racket; on the Yonex the faded "Roger F." is readable.
+
+### Outfits
+
+In the locker room the player chooses one of three tennis kits with the same
+design: **white**, **black** or **pink** (a preview appears on hover). The kit
+is shown in every scene, in the matches and on the ending pages. Before
+changing, the player wears street clothes (hoodie, jeans).
 
 ## Conditions and remembered changes
 
@@ -141,12 +149,26 @@ dark and a text says the ball hit the player on the temple at full force, they
 passed out, and therefore lost the match. In round 2 the breaking string has
 the same role.
 
+### How a match is played (minigame)
+
+Matches are played in a small tennis game (`specs/match-minigame.md`): the
+player moves with the arrow keys onto the marker behind the bounce arrow and
+presses space once per ball while a sweeping line is in the timing bar
+(green = perfect cross, yellow = safe ball, red = out). One game with real
+tennis scoring. Round 3 with the Wilson is deliberately easy, so the new racket
+feels like a winner before the final.
+
 ## Endings
 
-| Ending | Condition     | Content |
-| ------ | ------------- | ------- |
-| A      | Yonex chosen  | Tournament won: trophy, then the bonus scene with the mysterious person. |
-| B      | Wilson chosen | Final lost: the player applauds the winner at the ceremony. |
+| Ending | Condition     | Pages |
+| ------ | ------------- | ----- |
+| A      | Yonex chosen  | 1. Award ceremony in the evening, the player on place 1 with the trophy. 2. The stranger: he walks up, takes the racket, inspects it and leaves; then THE END. |
+| B      | Wilson chosen | 1. Award ceremony, the player on place 2, clapping. 2. End screen: alone on the bench at sunset; then THE END. |
+
+The pages are shown one at a time ("Continue"). In the stranger scene, the
+narration appears as timed captions at the top left ("As the crowd drifts
+away, a stranger in a cap walks up to you." and, after the handover, "He turns
+it slowly in his hands, …"), and his two lines appear in speech bubbles.
 
 Once an ending is reached, ordinary story actions stop. The player can review
 the outcome or start a new game (PT05).
@@ -332,14 +354,14 @@ Buttons: **Yes, start over** / **Cancel**
 
 ## Delivery stages
 
-1. **Core:** scenes, items, rules, and saving with text and buttons. Covers the
-   BRD and scenarios A1–A6. The first feature (`first-feature`) is part of this
-   stage.
-2. **Match minigame:** a browser-based timing game that only reports win or loss
-   back to Python.
-3. **World map:** a top-down 2D map of the grounds in a simple block style,
-   where the player can walk around freely. It triggers the same actions as the
-   buttons, and the buttons stay as a fallback.
+1. **Core** — done: scenes, items, rules and saving. Covers the BRD and
+   scenarios A1–A6 (`first-feature`, `new-game`).
+2. **Match minigame** — done: a browser-based timing game that only reports
+   win or loss back to Python (`match-minigame`).
+3. **World** — done in a different form than first planned: instead of free
+   walking on one map, the grounds are five point-and-click screens; the player
+   walks to every clicked spot (`point-and-click`, `bigger-world`,
+   `scene-polish`). The buttons stay as a fallback under "All actions".
 
 ## Notes
 
@@ -348,5 +370,4 @@ Buttons: **Yes, start over** / **Cancel**
   come from the story data and must not be hard-coded in `logic.py`. The ending
   follows the result of the last round.
 
-- In stage 1, the "Start match" button applies the fixed result directly. The
-  minigame replaces this in stage 2.
+- The "Start match" fallback button opens the minigame like the net does.
