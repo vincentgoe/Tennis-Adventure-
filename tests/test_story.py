@@ -199,3 +199,27 @@ def test_every_inspect_action_has_an_existing_closeup():
                 if image is None or not (ASSETS / image).is_file():
                     problems.append(action["id"])
     assert problems == []
+
+
+GAME_KEYS = {"opponent_speed", "opponent_reaction", "opponent_error", "ball_speed", "window", "reach"}
+
+
+def test_every_match_outcome_has_valid_game_settings():
+    """specs/match-minigame.md: every round is playable with its own settings."""
+    story = load_story()
+    problems = []
+    for round_ in story["matches"]["rounds"]:
+        for outcome in round_["outcomes"]:
+            game = outcome.get("game")
+            if game is None or not GAME_KEYS <= set(game):
+                problems.append(round_["name"])
+                continue
+            if not all(isinstance(game[k], (int, float)) and game[k] >= 0 for k in GAME_KEYS):
+                problems.append(round_["name"])
+    assert problems == []
+
+
+def test_round_two_ends_with_the_snapping_string():
+    story = load_story()
+    round_two = story["matches"]["rounds"][1]
+    assert all(o["game"].get("event") == "string_break" for o in round_two["outcomes"])
