@@ -22,6 +22,10 @@ PLAYER_W, PLAYER_H = 22, 42  # size of assets/sprites/player.svg at scale 1
 scene_view = components.declare_component(
     "scene_view", path=str(Path(__file__).parent / "components" / "scene_view")
 )
+# Small custom component: the tennis minigame (specs/match-minigame.md)
+match_view = components.declare_component(
+    "match_view", path=str(Path(__file__).parent / "components" / "match")
+)
 
 # Fallback icons when an action in story.json has no "icon"
 DEFAULT_ICONS = {
@@ -122,9 +126,31 @@ if "state" not in st.session_state:
     st.session_state.message_count = 0
 
 
+def new_message(text, speaker=None, anchor=None, closeup=None):
+    """Show `text` in the dialogue box. Every message gets a new id."""
+    st.session_state.message_count += 1
+    st.session_state.feedback = {
+        "id": st.session_state.message_count,
+        "text": text,
+        "speaker": speaker,
+        "anchor": anchor,  # where the speech bubble points to, or None
+        "closeup_svg": read_asset(closeup) if closeup else None,  # item reveal
+    }
+
+
 def handle_action(action_id):
-    """Check the action with logic.py and save only if it was accepted."""
+    """Check the action with logic.py and save only if it was accepted.
+
+    Starting a match opens the minigame instead of applying a fixed result.
+    """
     before = st.session_state.state
+    action = logic.find_action(story, before.scene, action_id)
+    if action and action.get("effects", {}).get("play_match") and logic.match_setup(before, story):
+        st.session_state.in_match = True
+        st.session_state.match_status = None
+        st.session_state.match_count = st.session_state.get("match_count", 0) + 1
+        st.session_state.feedback = None
+        return
     speaker = logic.speaker_for(before, action_id, story)
     anchor = logic.speaker_anchor(before, action_id, story)
     closeup = logic.closeup_for(before, action_id, story)
@@ -132,16 +158,46 @@ def handle_action(action_id):
     if accepted:
         save_game(DB_PATH, new_state)
         st.session_state.state = new_state
-    # Every action gets a new id, so the dialogue box knows it is a new message
-    st.session_state.message_count += 1
-    st.session_state.feedback = {
-        "id": st.session_state.message_count,
-        "text": message,
-        "speaker": speaker,
-        "anchor": anchor,  # where the speech bubble points to, or None
-        "closeup_svg": read_asset(closeup) if closeup else None,  # item reveal
-    }
+    new_message(message, speaker, anchor, closeup)
     st.session_state.ending_page = 0
+
+
+def handle_match_result():
+    """The minigame reported win or loss: logic.py decides what it means."""
+    key = f"match_view_{st.session_state.match_count}"
+    reported = (st.session_state.get(key) or {}).get("result")
+    new_state, status, message = logic.apply_match_result(st.session_state.state, reported, story)
+    if status in ("advanced", "blackout"):
+        save_game(DB_PATH, new_state)
+        st.session_state.state = new_state
+        st.session_state.in_match = False
+        st.session_state.ending_page = 0
+        new_message(message)
+    elif status == "replay":
+        st.session_state.match_status = "replay"
+        st.session_state.replay_text = message
+    else:
+        st.session_state.in_match = False
+
+
+def replay_match():
+    st.session_state.match_status = None
+    st.session_state.match_count += 1      # a new key starts a fresh game
+
+
+def ask_give_up():
+    st.session_state.match_status = "confirm_give_up"
+
+
+def cancel_give_up():
+    st.session_state.match_status = "replay"
+
+
+def confirm_give_up():
+    """Give up = a completely new game (after confirmation)."""
+    st.session_state.in_match = False
+    st.session_state.match_status = None
+    confirm_new_game()
 
 
 def ask_new_game():
@@ -162,6 +218,7 @@ def confirm_new_game():
     st.session_state.confirm_new_game = False
     st.session_state.ending_page = 0
     st.session_state.player_pos = None
+    st.session_state.in_match = False
 
 
 def next_ending_page():
@@ -232,6 +289,37 @@ with main_col:
         else:
             st.success(ending["title"], icon=":material/emoji_events:")
         st.stop()
+
+    setup = logic.match_setup(state, story) if st.session_state.get("in_match") else None
+    if setup is not None:
+        # --- The match screen ------------------------------------------------
+        st.header(f"{ui['match_screen']}: {setup['round']}")
+        status = st.session_state.get("match_status")
+        if status == "replay":
+            st.warning(st.session_state.get("replay_text"), icon=":material/sports_tennis:")
+            replay_col, give_up_col, _ = st.columns([1, 1, 3])
+            replay_col.button(ui["replay_match"], type="primary", on_click=replay_match, width="stretch")
+            give_up_col.button(ui["give_up"], on_click=ask_give_up, width="stretch")
+        elif status == "confirm_give_up":
+            st.warning(ui["give_up_confirm"], icon=":material/help:")
+            yes_col, no_col, _ = st.columns([1, 1, 3])
+            yes_col.button(ui["new_game_yes"], type="primary", on_click=confirm_give_up, width="stretch")
+            no_col.button(ui["new_game_cancel"], on_click=cancel_give_up, width="stretch")
+        else:
+            match_view(
+                round=setup["round"],
+                game=setup["game"],
+                must_lose=setup["required"] == "loss",
+                racket=state.choices.get("racket", "original"),
+                blackout_text=story["matches"]["blackout_text"],
+                ui={"start": ui["match_start"], "controls": ui["match_controls"],
+                    "aim": ui["match_aim"], "tutorial": ui["match_tutorial"]},
+                key=f"match_view_{st.session_state.match_count}",
+                on_change=handle_match_result,
+                default=None,
+            )
+        st.stop()
+    st.session_state.in_match = False
 
     scene = story["scenes"][state.scene]
     st.header(scene["name"])

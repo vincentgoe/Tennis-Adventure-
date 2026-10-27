@@ -856,7 +856,17 @@
         "outcomes": [
           {
             "result": "win",
-            "text": "You find your rhythm quickly. Clean serves, deep returns. Match won!"
+            "text": "You find your rhythm quickly. Clean serves, deep returns. Match won!",
+            "game": {
+              "opponent_speed": 55,
+              "opponent_reaction": 0.45,
+              "opponent_error": 0.25,
+              "ball_speed": 0.8,
+              "window": 0.22,
+              "reach": 16,
+              "opponent_aim": 0.3,
+              "tutorial": true
+            }
           }
         ]
       },
@@ -875,6 +885,16 @@
               "set_flags": [
                 "needs_racket"
               ]
+            },
+            "game": {
+              "opponent_speed": 140,
+              "opponent_reaction": 0.08,
+              "opponent_error": 0.03,
+              "ball_speed": 1.35,
+              "window": 0.09,
+              "reach": 11,
+              "opponent_aim": 0.9,
+              "event": "string_break"
             }
           }
         ]
@@ -892,7 +912,27 @@
               ]
             },
             "result": "win",
-            "text": "The first points are a disaster. The old racket feels strange in your hand. But slowly, something clicks. You win, just barely. Next up: the final."
+            "text": "The first points are a disaster. The old racket feels strange in your hand. But slowly, something clicks. You win, just barely. Next up: the final.",
+            "game": {
+              "opponent_speed": 130,
+              "opponent_reaction": 0.1,
+              "opponent_error": 0.04,
+              "ball_speed": 1.25,
+              "window": 0.1,
+              "reach": 11,
+              "opponent_aim": 0.85,
+              "op_after_points": 2,
+              "op": {
+                "opponent_speed": 50,
+                "opponent_reaction": 0.45,
+                "opponent_error": 0.35,
+                "ball_speed": 0.9,
+                "window": 0.3,
+                "reach": 20,
+                "opponent_aim": 0.2,
+                "power": 1.6
+              }
+            }
           },
           {
             "when": {
@@ -901,7 +941,16 @@
               ]
             },
             "result": "win",
-            "text": "The Wilson feels light and fast in your hand. It isn't easy, but you win the match. Next up: the final."
+            "text": "The Wilson feels light and fast in your hand. It isn't easy, but you win the match. Next up: the final.",
+            "game": {
+              "opponent_speed": 85,
+              "opponent_reaction": 0.25,
+              "opponent_error": 0.12,
+              "ball_speed": 1.0,
+              "window": 0.15,
+              "reach": 13,
+              "opponent_aim": 0.5
+            }
           }
         ]
       },
@@ -918,7 +967,17 @@
               ]
             },
             "result": "win",
-            "text": "Every shot lands exactly where you want it. Your opponent has no answer. You win the final!"
+            "text": "Every shot lands exactly where you want it. Your opponent has no answer. You win the final!",
+            "game": {
+              "opponent_speed": 40,
+              "opponent_reaction": 0.5,
+              "opponent_error": 0.45,
+              "ball_speed": 0.85,
+              "window": 0.32,
+              "reach": 22,
+              "opponent_aim": 0.15,
+              "power": 1.7
+            }
           },
           {
             "when": {
@@ -927,7 +986,16 @@
               ]
             },
             "result": "loss",
-            "text": "In the final, nothing works. Your shots land long and your serve lets you down. You lose the final."
+            "text": "In the final, nothing works. Your shots land long and your serve lets you down. You lose the final.",
+            "game": {
+              "opponent_speed": 150,
+              "opponent_reaction": 0.06,
+              "opponent_error": 0.02,
+              "ball_speed": 1.4,
+              "window": 0.08,
+              "reach": 10,
+              "opponent_aim": 0.95
+            }
           }
         ]
       }
@@ -973,6 +1041,11 @@
     "give_up_confirm": "Giving up starts a completely new game. All your progress will be lost. Are you sure?",
     "not_available": "You can't do that right now.",
     "continue": "Continue",
-    "the_end": "THE END"
+    "the_end": "THE END",
+    "match_start": "Click to start",
+    "match_controls": "Move: ← → or mouse  ·  Swing: space or click",
+    "match_aim": "Early hit = left  ·  late hit = right",
+    "match_tutorial": "Run to the ball's shadow  ·  swing when the ball reaches you",
+    "match_screen": "Match"
   }
 }
