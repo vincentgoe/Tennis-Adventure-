@@ -399,14 +399,17 @@
           const s = group[0];
           let marker;
           if (s.marker === "exit") {
-            const onLeft = s.x + s.w / 2 < args.width / 2;
-            marker = el("rect", {
+            // Arrow in the walking direction; default: towards the nearer edge
+            const ARROWS = { left: "◀", right: "▶", up: "▲", down: "▼" };
+            const direction = s.direction || (s.x + s.w / 2 < args.width / 2 ? "left" : "right");
+            const badge = el("rect", {
               class: "exit-badge", x: s.x, y: s.y + s.h / 2 - 9, width: s.w, height: 18, rx: 3 });
-            overlay.appendChild(marker);
+            overlay.appendChild(badge);
             const arrow = el("text", {
               class: "exit-arrow", x: s.x + s.w / 2, y: s.y + s.h / 2 + 4, "text-anchor": "middle" });
-            arrow.textContent = onLeft ? "◀" : "▶";
+            arrow.textContent = ARROWS[direction] || "▶";
             overlay.appendChild(arrow);
+            marker = badge;   // exits show only the arrow, no name (author feedback)
           } else if (s.name) {
             marker = addLabel(s, args.width);
           }

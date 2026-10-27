@@ -75,3 +75,16 @@ def test_hotspot_carries_name_and_label_position(mini_story, make_state):
 
     assert spot["name"] == "Shed door"
     assert spot["label_at"] == [25, 15]
+
+
+def test_exit_hotspot_passes_its_direction(mini_story, make_state):
+    """specs/bigger-world.md: exit arrows point in the walking direction."""
+    leave = mini_story["scenes"]["shed"]["actions"][1]
+    assert leave["id"] == "leave_shed"
+    leave["hotspot"] = {"x": 4, "y": 150, "w": 30, "h": 26, "marker": "exit",
+                        "direction": "up", "name": "Main path"}
+    state = make_state(scene="shed")
+
+    spot = next(h for h in scene_hotspots(state, mini_story) if h["id"] == "leave_shed")
+    assert spot["direction"] == "up"
+    assert spot["name"] == "Main path"

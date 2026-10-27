@@ -113,7 +113,11 @@ def action_icon(action):
 
 if "state" not in st.session_state:
     saved = load_game(DB_PATH)
-    st.session_state.state = saved if saved is not None else logic.new_game(story)
+    # A save from an older version may point to a scene that no longer exists
+    # (e.g. the old single "grounds" screen): then start a new game.
+    if saved is None or saved.scene not in story["scenes"]:
+        saved = logic.new_game(story)
+    st.session_state.state = saved
     st.session_state.feedback = None  # message of the last action, see below
     st.session_state.message_count = 0
 
