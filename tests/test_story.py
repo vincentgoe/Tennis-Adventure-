@@ -223,3 +223,19 @@ def test_round_two_ends_with_the_snapping_string():
     story = load_story()
     round_two = story["matches"]["rounds"][1]
     assert all(o["game"].get("event") == "string_break" for o in round_two["outcomes"])
+
+
+def test_every_match_outcome_has_a_valid_timing_bar():
+    """specs/match-minigame.md, version 2: the timing bar has a green and a
+    yellow zone that fit on the bar, and a sweeping line."""
+    story = load_story()
+    problems = []
+    for round_ in story["matches"]["rounds"]:
+        for outcome in round_["outcomes"]:
+            games = [outcome["game"]] + ([outcome["game"]["op"]] if "op" in outcome["game"] else [])
+            for game in games:
+                bar_speed, green, yellow = game.get("bar_speed"), game.get("green"), game.get("yellow")
+                if None in (bar_speed, green, yellow) or bar_speed <= 0 or green <= 0 or yellow <= 0 \
+                        or green + 2 * yellow >= 1:
+                    problems.append(round_["name"])
+    assert problems == []

@@ -31,6 +31,35 @@ intact (see "Match system" in `docs/story.md`).
 - A start screen explains the controls; clicking it starts the game (and gives
   the game keyboard focus).
 
+### Version 2 (author feedback after the first play test)
+
+The author did not hit a single ball and found it unclear when to swing.
+Changes, inspired by timing meters in sports games (TopSpin 2K25's shot meter,
+baseball and golf timing bars):
+
+- **Keyboard only:** ← / → to move, space to swing. The mouse only starts the
+  game (mouse movement caused accidental mistakes).
+- **Timing bar** at the bottom: red | yellow | green | yellow | red. A line
+  sweeps quickly from side to side. The bar lights up once the ball has
+  bounced; from then until shortly after the contact point, space counts:
+  - **green:** perfect cross-court shot (fast, to the side away from the
+    opponent),
+  - **yellow:** solid, safe ball over the net,
+  - **red:** the ball goes out, the point is lost.
+- **Direction indicator:** at the bounce point an arrow shows where the ball
+  jumps after the bounce, and a marker on the player's line shows where to
+  stand. The player must stand on that line (within reach), otherwise the
+  swing misses ("TOO FAR").
+- **Position matters** (like TopSpin): the closer the player stands to the
+  marker, the slower the line sweeps.
+- Aiming by early/late timing is replaced by the bar zones.
+- Easier overall: more time after the bounce, larger reach and wider zones,
+  especially in round 1.
+- The racket is held by the grip, head up and out.
+- New settings per round: `bar_speed` (sweeps per second), `green` and
+  `yellow` (zone widths as fractions of the bar). `window` is the time after
+  the contact point during which a swing still counts.
+
 ### Difficulty and story events (story content)
 
 Each match outcome in `story.json` gets a `game` block with the settings for
