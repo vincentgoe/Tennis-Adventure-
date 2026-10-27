@@ -249,3 +249,11 @@ def test_every_page_image_variant_exists():
                for variant in page.get("images", [])
                if not (ASSETS / variant["image"]).is_file()]
     assert missing == []
+
+
+def test_only_the_center_court_shows_the_story_box_in_the_middle():
+    """specs/point-and-click.md: centered, more transparent box on the court."""
+    story = load_story()
+    centered = [sid for sid, scene in story["scenes"].items()
+                if scene.get("dialog_position") == "center"]
+    assert centered == ["court"]

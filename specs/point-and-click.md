@@ -55,6 +55,13 @@ This makes exploring more fun and is a step towards the world map (stage 3).
   speaker if it is allowed, otherwise the speaker of the matching blocked text,
   otherwise `None`).
 
+### Centered story box on the Center Court (author request)
+
+- A scene may set `dialog_position: "center"` in `story.json`. Its text box
+  is then shown in the middle of the picture with a more transparent black
+  background. Only the Center Court (`court`) uses this; all other scenes keep
+  the box at the bottom.
+
 ### Rules and saving
 
 - A click goes through the same path as a button: `logic.apply_action`, then
