@@ -87,4 +87,4 @@ corrected explicitly (not weakened), with reference to this spec:
 - [x] The two corrected story tests are green; all other existing tests are
       unchanged and green.
 - [x] Manual check: play from the start to an ending through all five screens.
-- [ ] Committed on `bigger-world`, pushed, reviewed, merged into `main`.
+- [x] Committed on `bigger-world`, pushed, reviewed, merged into `main`.
