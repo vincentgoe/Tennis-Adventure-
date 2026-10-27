@@ -239,3 +239,13 @@ def test_every_match_outcome_has_a_valid_timing_bar():
                         or green + 2 * yellow >= 1:
                     problems.append(round_["name"])
     assert problems == []
+
+
+def test_every_page_image_variant_exists():
+    """specs/outfit-choice.md: ending pages show the chosen outfit."""
+    story = load_story()
+    missing = [variant["image"]
+               for ending in story["endings"].values() for page in ending["pages"]
+               for variant in page.get("images", [])
+               if not (ASSETS / variant["image"]).is_file()]
+    assert missing == []
