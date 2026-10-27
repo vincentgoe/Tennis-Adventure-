@@ -40,3 +40,25 @@ def test_three_outfit_actions_in_the_locker_room():
         flags = set(action["effects"]["set_flags"])
         assert len(flags & OUTFIT_FLAGS) == 1
         assert action["requires"] == {"not_flags": ["changed"]}
+
+
+def test_hotspot_passes_the_preview(make_state, mini_story):
+    """specs/outfit-choice.md: hovering an outfit shows a preview."""
+    from logic import scene_hotspots
+    take = mini_story["scenes"]["shed_inside"]["actions"][1]
+    assert take["id"] == "take_yonex"
+    take["preview"] = "items/yonex.svg"
+    take["hotspot"] = {"x": 10, "y": 10, "w": 20, "h": 20, "name": "Old Yonex"}
+    state = make_state(scene="shed_inside", items=["key"])
+
+    spot = next(h for h in scene_hotspots(state, mini_story) if h["id"] == "take_yonex")
+    assert spot["preview"] == "items/yonex.svg"
+
+
+def test_every_outfit_action_has_an_existing_preview():
+    from pathlib import Path
+    assets = Path(__file__).parent.parent / "assets"
+    story = load_story()
+    for action in story["scenes"]["locker_room"]["actions"]:
+        if "changed" in action.get("effects", {}).get("set_flags", []):
+            assert (assets / action["preview"]).is_file(), action["id"]

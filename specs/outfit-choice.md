@@ -26,6 +26,13 @@ their character looks.
     entries; the first matching one is used, otherwise its `image`.
 - New pure function `logic.page_image(state, page, story)`.
 
+### Preview (author request)
+
+- Hovering an outfit in the locker room menu shows a large preview of the
+  player wearing it, next to the menu.
+- Story content: an action may set `preview` (an image in `assets/`).
+  `logic.scene_hotspots` passes it on; the app adds the image itself.
+
 ## Out of scope
 
 - Changing the outfit later (the locker room closes after changing, as before).
@@ -35,6 +42,8 @@ their character looks.
 - [ ] New tests written first and green:
   - `page_image` returns the matching variant, or the default image.
   - `player_image` returns the black / pink sprite after choosing them.
+  - `scene_hotspots` passes an action's `preview`; every outfit action has
+    an existing preview image.
   - In `story.json`, the three outfit actions exist, each sets `changed`
     and exactly one outfit flag, and every page image variant exists.
 - [ ] All existing tests are still green and unchanged.
