@@ -1,0 +1,585 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <!--
+      Tennis minigame for Plot Twist (specs/match-minigame.md, version 2).
+
+      Top-down rally. Move with the arrow keys onto the marker behind the
+      bounce arrow, then press space while the sweeping line of the timing bar
+      is in the right zone: green = perfect cross, yellow = safe ball, red =
+      out. The closer you stand to the marker, the slower the line sweeps.
+      One game with real tennis counting. Python sends the round's settings and
+      gets back only {result: "win" | "loss"}; logic.py decides what it means.
+      Plain JavaScript and a canvas, talking to Streamlit with its postMessage
+      protocol, so no build step or extra package is needed.
+    -->
+    <style>
+      @font-face { font-family: "GameFont"; src: url("PressStart2P-Regular.ttf") format("truetype"); }
+      html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+      #wrap { position: relative; width: 100%; margin: 0 auto; }
+      canvas { display: block; width: 100%; height: auto; border-radius: 4px; outline: none; }
+    </style>
+  </head>
+  <body>
+    <div id="wrap"><canvas id="game" width="640" height="400" tabindex="0"></canvas></div>
+    <script>
+      // ------------------------------------------------------------------ setup
+      const W = 640, H = 400;
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const wrap = document.getElementById("wrap");
+      const FONT = '"GameFont", "Courier New", monospace';
+
+      let args = null;          // settings from Python
+      let started = false, finished = false, reported = false;
+      let cfg = null, opCfg = null;
+
+      function send(type, data) {
+        window.parent.postMessage(Object.assign({ isStreamlitMessage: true, type: type }, data), "*");
+      }
+      function report(result) {
+        if (reported) return;
+        reported = true;
+        send("streamlit:setComponentValue", {
+          value: { result: result, score: scoreText(), nonce: Date.now() + Math.random() },
+          dataType: "json",
+        });
+      }
+      function updateHeight() { send("streamlit:setFrameHeight", { height: wrap.offsetHeight }); }
+      function fitToWindow() {
+        let windowHeight = window.innerHeight;
+        try { windowHeight = window.parent.innerHeight; } catch (e) { /* other origin */ }
+        wrap.style.maxWidth = Math.round(windowHeight * 0.74 * W / H) + "px";
+        requestAnimationFrame(updateHeight);
+      }
+      try { window.parent.addEventListener("resize", fitToWindow); } catch (e) { /* ignore */ }
+
+      // ------------------------------------------------------------------ court geometry
+      // Court units: x 0..100 across, y 0 (opponent baseline) .. 200 (player baseline).
+      function project(cx, cy, h = 0) {
+        const t = cy / 200;
+        const sy = 72 + t * 250;
+        const half = 140 + t * 120;
+        const scale = 0.55 + 0.6 * t;
+        return { x: 320 + (cx - 50) / 50 * half, y: sy - h * scale, scale: scale };
+      }
+
+      // ------------------------------------------------------------------ state
+      const PLAYER_Y = 188, OPP_Y = 12;
+      const player = { x: 50, swing: 0 };
+      const opp = { x: 50, target: 50, swing: 0, moveAfter: 0 };
+      let ball = null;          // current shot
+      let keys = { left: false, right: false };
+      let points = { p: 0, o: 0 };
+      let pointsPlayed = 0;
+      let pause = 0;            // seconds until the next serve
+      let banner = null;        // {text, color, until}
+      let shake = 0, glow = false;
+      let particles = [], trail = [];
+      let blackout = null;      // {t} while the blackout plays
+      let snap = null;          // {t, x} while the string snaps
+      let now = 0;
+      let rally = 0;            // shots in the current rally: each one is a bit faster
+      let barPhase = 0;         // the sweeping line: 0..2 (0..1 left->right, 1..2 back)
+
+      const rand = (a, b) => a + Math.random() * (b - a);
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      function show(text, color = "#ffffff", seconds = 1.1) { banner = { text, color, until: now + seconds }; }
+
+      // ------------------------------------------------------------------ scoring
+      const CALL = ["0", "15", "30", "40"];
+      function gameWinner() {
+        const { p, o } = points;
+        if (p >= 4 && p - o >= 2) return "p";
+        if (o >= 4 && o - p >= 2) return "o";
+        return null;
+      }
+      function scoreText() {
+        const { p, o } = points;
+        if (finished && gameWinner()) return gameWinner() === "p" ? "GAME YOU" : "GAME OPP";
+        if (p >= 3 && o >= 3) {
+          if (p === o) return "DEUCE";
+          return p > o ? "ADV YOU" : "ADV OPP";
+        }
+        return `${CALL[Math.min(p, 3)]} : ${CALL[Math.min(o, 3)]}`;
+      }
+      function wouldWin(side) {
+        const n = { p: points.p + (side === "p"), o: points.o + (side === "o") };
+        return side === "p" ? n.p >= 4 && n.p - n.o >= 2 : n.o >= 4 && n.o - n.p >= 2;
+      }
+
+      function pointTo(side, why) {
+        if (finished || blackout) return;
+        // A round the story says must be lost: winning its last point ends in the blackout
+        if (side === "p" && args.must_lose && wouldWin("p")) { blackout = { t: 0 }; ball = null; return; }
+        points[side] += 1;
+        pointsPlayed += 1;
+        ball = null;
+        rally = 0;
+        if (why) show(why, side === "p" ? "#7ee081" : "#ff8a7a", 0.9);
+        const winner = gameWinner();
+        if (winner) { endMatch(winner === "p" ? "win" : "loss"); return; }
+        setTimeout(() => show(scoreText(), "#ffffff", 1.0), 650);
+        // Yonex: after a few hard points, the racket becomes overpowered
+        if (opCfg && pointsPlayed >= (args.game.op_after_points || 0) && cfg !== opCfg) {
+          cfg = opCfg; glow = true;
+          const p = project(player.x, PLAYER_Y);
+          for (let i = 0; i < 24; i++) spark(p.x, p.y - 30, "#ffd94a");
+        }
+        pause = args.game.tutorial && pointsPlayed < 2 ? 2.4 : 1.6;
+      }
+
+      function endMatch(result) {
+        finished = true;
+        ball = null;
+        show(result === "win" ? "GAME! YOU WIN" : "GAME! YOU LOSE", result === "win" ? "#7ee081" : "#ff8a7a", 3);
+        setTimeout(() => report(result), 1800);
+      }
+
+      // ------------------------------------------------------------------ shots
+      // A shot flies from its hitter to a bounce point, then on to the receiver's contact point.
+      function launch(from, fromX, toX, speed) {
+        const toOpp = from === "p";
+        rally += 1;
+        speed *= 1 + 0.04 * (rally - 1);    // long rallies get faster until someone misses
+        const startY = toOpp ? PLAYER_Y - 3 : OPP_Y + 3;
+        const bounceY = toOpp ? rand(48, 70) : rand(130, 148);
+        const contactY = toOpp ? OPP_Y + 3 : PLAYER_Y - 3;
+        const drift = rand(-14, 14);        // where the ball jumps after the bounce
+        ball = {
+          from, start: { x: fromX, y: startY }, bounce: { x: toX, y: bounceY },
+          contact: { x: clamp(toX + drift, 3, 97), y: contactY },
+          t: 0, t1: 0.95 / speed, t2: 0.62 / speed, hit: false, swung: false,
+        };
+        if (toOpp) planOpponent();
+      }
+
+      function ballPos(b) {
+        if (b.t <= b.t1) {
+          const k = b.t / b.t1;
+          return { x: b.start.x + (b.bounce.x - b.start.x) * k, y: b.start.y + (b.bounce.y - b.start.y) * k,
+                   h: 34 * 4 * k * (1 - k) + 6 * (1 - k) };
+        }
+        const k = (b.t - b.t1) / b.t2;
+        const kk = Math.min(k, 1);
+        return { x: b.bounce.x + (b.contact.x - b.bounce.x) * k, y: b.bounce.y + (b.contact.y - b.bounce.y) * k,
+                 h: 18 * 4 * kk * (1 - kk) + 10 * kk };
+      }
+
+      // The player can hit from the bounce until shortly after the contact point
+      function hittable() {
+        return ball && ball.from === "o" && !ball.hit && ball.t >= ball.t1 &&
+               ball.t <= ball.t1 + ball.t2 + cfg.window;
+      }
+      function distanceToMarker() { return ball ? Math.abs(player.x - ball.contact.x) : 99; }
+
+      function serve() {
+        opp.swing = 0.25;
+        launch("o", opp.x, rand(25, 75), cfg.ball_speed * 0.85);
+      }
+
+      function planOpponent() {
+        const error = (1 - (cfg.opponent_aim || 0.5)) * rand(-8, 8);
+        opp.target = clamp(ball.contact.x + error * 0.3, 0, 100);
+        opp.moveAfter = now + cfg.opponent_reaction;
+      }
+
+      function opponentReturns() {
+        if (Math.random() < cfg.opponent_error) {   // unforced error
+          ball = null;
+          pointTo("p", Math.random() < 0.5 ? "NET!" : "OUT!");
+          return;
+        }
+        opp.swing = 0.25;
+        const away = player.x < 50 ? rand(70, 90) : rand(10, 30);
+        const target = clamp(rand(20, 80) + (cfg.opponent_aim || 0.5) * (away - 50), 8, 92);
+        launch("o", opp.x, target, cfg.ball_speed);
+      }
+
+      // ------------------------------------------------------------------ the timing bar
+      // Zones from the centre: green, then yellow on both sides, red outside.
+      function barPosition() { return barPhase <= 1 ? barPhase : 2 - barPhase; }   // 0..1
+      function barZone(pos) {
+        const d = Math.abs(pos - 0.5);
+        if (d <= cfg.green / 2) return "green";
+        if (d <= cfg.green / 2 + cfg.yellow) return "yellow";
+        return "red";
+      }
+      function barSpeed() {
+        // Standing on the marker keeps the line slow; standing at the edge of your reach makes it fast
+        const q = hittable() ? clamp(distanceToMarker() / cfg.reach, 0, 1) : 0;
+        return cfg.bar_speed * (1 + 0.9 * q);
+      }
+
+      function trySwing() {
+        if (!started || finished || blackout || snap) return;
+        player.swing = 0.25;
+        // One swing per incoming ball, like in real tennis: the first press counts
+        if (!ball || ball.from !== "o" || ball.hit || ball.swung) return;
+        ball.swung = true;
+        if (!hittable()) { show("TOO EARLY", "#ff8a7a", 0.8); return; }   // before the bounce
+        if (distanceToMarker() > cfg.reach) { show("TOO FAR", "#ff8a7a", 0.8); return; }
+
+        const zone = barZone(barPosition());
+        // Round 2: on the last point the string snaps, whatever the timing
+        if (args.game.event === "string_break" && zone !== "red" && (wouldWin("o") || wouldWin("p"))) {
+          snap = { t: 0, x: player.x };
+          ball = null;
+          return;
+        }
+        if (zone === "red") {                             // the ball goes out
+          const p = project(player.x, PLAYER_Y);
+          for (let i = 0; i < 6; i++) spark(p.x + 14, p.y - 40, "#ff8a7a");
+          ball = null;
+          pointTo("o", "OUT!");
+          return;
+        }
+        const perfect = zone === "green";
+        // green: cross court, away from the opponent; yellow: a safe ball into the middle
+        const target = perfect ? (opp.x < 50 ? rand(80, 92) : rand(8, 20)) : rand(28, 72);
+        const speed = cfg.ball_speed * (perfect ? (cfg.power || 1.4) : 1.0);
+        ball.hit = true;
+        const p = project(player.x, PLAYER_Y);
+        if (perfect) {
+          show("PERFECT!", "#7ee081", 0.7);
+          shake = 0.18;
+          for (let i = 0; i < 14; i++) spark(p.x + 14, p.y - 40, "#c8ffb0");
+        } else {
+          show("GOOD", "#ffd94a", 0.5);
+        }
+        launch("p", player.x, target, speed);
+      }
+
+      function spark(x, y, color) {
+        particles.push({ x, y, vx: rand(-90, 90), vy: rand(-120, 20), life: rand(0.3, 0.6), color });
+      }
+
+      // ------------------------------------------------------------------ input (keyboard only)
+      window.addEventListener("keydown", e => {
+        if (e.key === "ArrowLeft") { keys.left = true; e.preventDefault(); }
+        if (e.key === "ArrowRight") { keys.right = true; e.preventDefault(); }
+        if (e.key === " " || e.code === "Space") {
+          e.preventDefault();
+          if (e.repeat) return;
+          if (!started) start(); else trySwing();
+        }
+      });
+      window.addEventListener("keyup", e => {
+        if (e.key === "ArrowLeft") keys.left = false;
+        if (e.key === "ArrowRight") keys.right = false;
+      });
+      // The mouse only starts the game (and gives it keyboard focus)
+      canvas.addEventListener("mousedown", e => { e.preventDefault(); canvas.focus(); start(); });
+
+      function start() {
+        if (started || !args) return;
+        started = true;
+        canvas.focus();
+        pause = args.game.tutorial ? 2.4 : 1.4;
+      }
+
+      // ------------------------------------------------------------------ update
+      function update(dt) {
+        now += dt;
+        if (!started) return;
+        player.swing = Math.max(0, player.swing - dt);
+        opp.swing = Math.max(0, opp.swing - dt);
+        shake = Math.max(0, shake - dt);
+        particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt; p.life -= dt; });
+        particles = particles.filter(p => p.life > 0);
+        barPhase = (barPhase + 2 * barSpeed() * dt) % 2;
+
+        if (blackout) { blackout.t += dt; if (blackout.t > 5.2 && !finished) { finished = true; report("win"); } return; }
+        if (snap) {
+          snap.t += dt;
+          // With a snapped string the match cannot go on: it is lost (story: the last point)
+          if (snap.t > 1.6) { snap = null; points.o = Math.max(points.o, points.p + 2, 4); endMatch("loss"); }
+          return;
+        }
+
+        const speed = 120;
+        if (keys.left) player.x -= speed * dt;
+        if (keys.right) player.x += speed * dt;
+        player.x = clamp(player.x, -4, 104);
+
+        if (now >= opp.moveAfter) {
+          const d = opp.target - opp.x;
+          opp.x += clamp(d, -cfg.opponent_speed * dt, cfg.opponent_speed * dt);
+        }
+
+        if (finished) return;
+        if (!ball) {
+          if (pause > 0) { pause -= dt; if (pause <= 0) serve(); }
+          return;
+        }
+
+        ball.t += dt;
+        const pos = ballPos(ball);
+        trail.push({ x: pos.x, y: pos.y, h: pos.h });
+        if (trail.length > 7) trail.shift();
+
+        const contactTime = ball.t1 + ball.t2;
+        if (ball.from === "p" && ball.t >= contactTime) {
+          if (Math.abs(opp.x - ball.contact.x) <= 12) opponentReturns();
+          else pointTo("p", "WINNER!");
+        } else if (ball.from === "o" && !ball.hit && ball.t > contactTime + cfg.window) {
+          pointTo("o", ball.swung ? null : "MISS");
+        }
+      }
+
+      // ------------------------------------------------------------------ drawing
+      function rect(x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+
+      function drawCourt() {
+        rect(0, 0, W, 40, "#9fd6f2");
+        rect(0, 26, W, 30, "#45536b");
+        for (let i = 0; i < 40; i++) {
+          const x = 6 + i * 16, bob = Math.sin(now * 4 + i) * (finished ? 2 : 0.6);
+          rect(x, 30 + (i % 2) * 3 + bob, 9, 8, "#f2c49b");
+          rect(x - 1, 38 + (i % 2) * 3 + bob, 11, 10, ["#e74c3c", "#2980b9", "#f1c40f", "#27ae60", "#8e44ad"][i % 5]);
+        }
+        rect(0, 56, W, H - 56, "#5ea83f");
+        for (let y = 56; y < H; y += 24) rect(0, y, W, 12, "#6dbb4a");
+        const a = project(-6, -6), b = project(106, -6), c = project(106, 206), d = project(-6, 206);
+        ctx.fillStyle = "#d9743a";
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.lineTo(d.x, d.y); ctx.fill();
+        ctx.strokeStyle = "#fbf7ee"; ctx.lineWidth = 2;
+        const line = (x1, y1, x2, y2) => {
+          const p = project(x1, y1), q = project(x2, y2);
+          ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+        };
+        line(0, 0, 100, 0); line(0, 200, 100, 200); line(0, 0, 0, 200); line(100, 0, 100, 200);
+        line(12, 0, 12, 200); line(88, 0, 88, 200);
+        line(12, 54, 88, 54); line(12, 146, 88, 146); line(50, 54, 50, 146);
+      }
+
+      function drawNet() {
+        const l = project(-4, 100), r = project(104, 100);
+        rect(l.x, l.y - 14, r.x - l.x, 14, "rgba(30,30,30,0.55)");
+        ctx.fillStyle = "rgba(10,10,10,0.6)";
+        for (let x = l.x; x < r.x; x += 5) ctx.fillRect(Math.round(x), l.y - 14, 1, 14);
+        rect(l.x, l.y - 16, r.x - l.x, 3, "#fbf7ee");
+        rect(l.x - 3, l.y - 20, 4, 21, "#333333");
+        rect(r.x - 1, r.y - 20, 4, 21, "#333333");
+      }
+
+      function drawPerson(cx, cy, shirt, opts) {
+        const p = project(cx, cy);
+        const s = p.scale * 2.3;                       // pixels per figure unit
+        const x = p.x - 7 * s, y = p.y - 40 * s;
+        const R = (dx, dy, w, h, c) => rect(x + dx * s, y + dy * s, w * s, h * s, c);
+        if (opts.glow) {
+          ctx.fillStyle = "rgba(255, 217, 74, 0.35)";
+          ctx.beginPath(); ctx.ellipse(p.x, p.y - 20 * s, 14 * s, 24 * s, 0, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.fillStyle = "rgba(0,0,0,0.18)";            // shadow
+        ctx.beginPath(); ctx.ellipse(p.x, p.y, 9 * s, 2.5 * s, 0, 0, Math.PI * 2); ctx.fill();
+        R(1, 26, 5, 5, opts.shorts); R(8, 26, 5, 5, opts.shorts);
+        R(1, 31, 5, 5, "#f2c49b"); R(8, 31, 5, 5, "#f2c49b");
+        R(0, 36, 6, 3, "#fafafa"); R(8, 36, 6, 3, "#fafafa");
+        R(0, 12, 14, 15, shirt);
+        if (opts.stripe) R(0, 18, 14, 2, opts.stripe);
+        R(2, 0, 10, 11, "#f2c49b"); R(2, 0, 10, 3, opts.hair);
+        if (opts.band) R(2, 3, 10, 2, opts.band);
+        R(4, 5, 2, 2, "#2b2b2b"); R(8, 5, 2, 2, "#2b2b2b");
+        R(-3, 13, 3, 10, shirt);
+        R(14, 13, 3, 10, shirt);
+        // The racket is held by the grip in the right hand, head up and out.
+        // A swing sweeps it from behind the body forward across it.
+        const k = opts.swing > 0 ? (1 - opts.swing / 0.25) : 0;
+        const angle = 0.55 - k * 2.2;                  // radians, 0 = straight up
+        const hx = x + 15.5 * s, hy = y + 23 * s;      // the hand
+        ctx.save();
+        ctx.translate(hx, hy);
+        ctx.rotate(angle);
+        ctx.fillStyle = "#3b2a1a"; ctx.fillRect(-1 * s, -7 * s, 2 * s, 8 * s);       // grip, from the hand upwards
+        ctx.fillStyle = opts.racket; ctx.fillRect(-0.6 * s, -9 * s, 1.2 * s, 3 * s); // throat
+        ctx.strokeStyle = opts.racket; ctx.lineWidth = 1.6 * s;
+        ctx.beginPath(); ctx.ellipse(0, -14 * s, 4 * s, 5.5 * s, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+        R(14, 22, 3, 2, "#f2c49b");                     // the hand on the grip
+      }
+
+      function drawIndicator() {
+        // Where the incoming ball bounces, where it jumps after that, and where to stand
+        if (!ball || ball.from !== "o" || ball.hit) return;
+        const b = project(ball.bounce.x, ball.bounce.y);
+        const c = project(ball.contact.x, ball.contact.y);
+        const stand = project(ball.contact.x, PLAYER_Y);
+        ctx.strokeStyle = "rgba(255,255,255,0.75)"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.ellipse(b.x, b.y, 8, 3, 0, 0, Math.PI * 2); ctx.stroke();
+        // arrow: bounce -> where the ball jumps
+        const ang = Math.atan2(c.y - b.y, c.x - b.x);
+        const ax = b.x + Math.cos(ang) * 26, ay = b.y + Math.sin(ang) * 26;
+        ctx.strokeStyle = "#ffd94a"; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(ax, ay); ctx.stroke();
+        ctx.fillStyle = "#ffd94a";
+        ctx.beginPath();
+        ctx.moveTo(ax + Math.cos(ang) * 6, ay + Math.sin(ang) * 6);
+        ctx.lineTo(ax + Math.cos(ang + 2.4) * 6, ay + Math.sin(ang + 2.4) * 6);
+        ctx.lineTo(ax + Math.cos(ang - 2.4) * 6, ay + Math.sin(ang - 2.4) * 6);
+        ctx.fill();
+        // dashed line down to the marker on the player's line
+        ctx.setLineDash([4, 4]); ctx.strokeStyle = "rgba(255,217,74,0.6)"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(stand.x, stand.y); ctx.stroke();
+        ctx.setLineDash([]);
+        // the marker: green when the player stands within reach
+        const inReach = Math.abs(player.x - ball.contact.x) <= cfg.reach;
+        const half = cfg.reach / 50 * (140 + PLAYER_Y / 200 * 120);
+        ctx.fillStyle = inReach ? "rgba(126,224,129,0.35)" : "rgba(255,217,74,0.25)";
+        ctx.fillRect(stand.x - half, stand.y - 4, half * 2, 8);
+        ctx.strokeStyle = inReach ? "#7ee081" : "#ffd94a"; ctx.lineWidth = 2;
+        ctx.strokeRect(stand.x - half, stand.y - 4, half * 2, 8);
+      }
+
+      function drawBall() {
+        if (!ball) return;
+        const pos = ballPos(ball);
+        const ground = project(pos.x, pos.y);
+        const sz = 3.5 * ground.scale + 1;
+        ctx.fillStyle = "rgba(0,0,0,0.28)";              // shadow on the ground
+        ctx.beginPath(); ctx.ellipse(ground.x, ground.y, sz * 1.3, sz * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+        trail.forEach((t, i) => {
+          const q = project(t.x, t.y, t.h);
+          ctx.fillStyle = `rgba(215, 232, 74, ${0.08 + i * 0.05})`;
+          ctx.beginPath(); ctx.arc(q.x, q.y, sz * 0.8, 0, Math.PI * 2); ctx.fill();
+        });
+        const b = project(pos.x, pos.y, pos.h);
+        ctx.fillStyle = "#d7e84a"; ctx.strokeStyle = "#9fb02c"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(b.x, b.y, sz, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
+
+      function drawBar() {
+        // Timing bar below the court: red | yellow | green | yellow | red, with a sweeping line
+        const bx = 120, by = 352, bw = 400, bh = 18;
+        const active = hittable();
+        ctx.globalAlpha = active ? 1 : 0.45;
+        rect(bx - 4, by - 4, bw + 8, bh + 8, "#111111");
+        rect(bx, by, bw, bh, "#d64545");
+        const yw = (cfg.green / 2 + cfg.yellow) * bw, gw = cfg.green / 2 * bw;
+        rect(bx + bw / 2 - yw, by, yw * 2, bh, "#f1c40f");
+        rect(bx + bw / 2 - gw, by, gw * 2, bh, "#3fbf5a");
+        const mx = bx + barPosition() * bw;
+        rect(mx - 2, by - 7, 4, bh + 14, "#ffffff");
+        ctx.globalAlpha = 1;
+        if (active) {
+          ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2;
+          ctx.strokeRect(bx - 4, by - 4, bw + 8, bh + 8);
+        }
+      }
+
+      function text(str, x, y, size, color, align = "center") {
+        ctx.font = `${size}px ${FONT}`;
+        ctx.textAlign = align; ctx.textBaseline = "middle";
+        ctx.fillStyle = "rgba(0,0,0,0.65)"; ctx.fillText(str, x + 2, y + 2);
+        ctx.fillStyle = color; ctx.fillText(str, x, y);
+      }
+
+      function drawHud() {
+        rect(10, 62, 170, 30, "rgba(12,12,12,0.85)");
+        text("YOU", 20, 77, 9, "#ffffff", "left");
+        text(scoreText(), 98, 77, 9, "#ffd94a");
+        text("OPP", 170, 77, 9, "#ffffff", "right");
+        text(args.round.toUpperCase(), W - 12, 77, 8, "#ffffff", "right");
+        if (banner && now < banner.until) text(banner.text, W / 2, 160, 16, banner.color);
+        if (args.game.tutorial && started && !finished && pointsPlayed < 3) {
+          text(args.ui.tutorial, W / 2, 337, 7, "#ffffff");
+        }
+      }
+
+      function drawStartScreen() {
+        rect(0, 0, W, H, "rgba(12,12,12,0.74)");
+        text(args.round.toUpperCase(), W / 2, 110, 18, "#ffd94a");
+        text(args.ui.controls, W / 2, 168, 9, "#ffffff");
+        text(args.ui.aim, W / 2, 196, 8, "#ffffff");
+        if (Math.floor(now * 2) % 2 === 0) text(args.ui.start, W / 2, 252, 12, "#7ee081");
+      }
+
+      function drawSnap() {
+        const p = project(snap.x, PLAYER_Y);
+        text("*PING*", p.x, p.y - 90, 18, "#ffffff");
+        const k = Math.min(snap.t / 1.0, 1);
+        const by = PLAYER_Y - 3 + (100 - PLAYER_Y + 3) * k;
+        const q = project(snap.x, by, 12 * (1 - k) + 4 * Math.sin(k * Math.PI));
+        ctx.fillStyle = "#d7e84a"; ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, Math.PI * 2); ctx.fill();
+        for (let i = 0; i < 6; i++) {
+          rect(p.x + 18 + Math.cos(i) * snap.t * 40, p.y - 50 - Math.sin(i * 2) * snap.t * 30, 6, 1, "#f5f1e6");
+        }
+      }
+
+      function drawBlackout() {
+        const t = blackout.t;
+        if (t < 0.7) {                                  // the ball shoots at the head
+          const k = t / 0.7;
+          const q = project(opp.x + (player.x - opp.x) * k, OPP_Y + (PLAYER_Y - OPP_Y) * k, 30 + 30 * k);
+          ctx.fillStyle = "#d7e84a"; ctx.beginPath(); ctx.arc(q.x, q.y, 3 + 4 * k, 0, Math.PI * 2); ctx.fill();
+        } else if (t < 0.9) {
+          rect(0, 0, W, H, "rgba(255,255,255,0.9)");    // impact flash
+        } else {
+          rect(0, 0, W, H, `rgba(0,0,0,${Math.min((t - 0.9) / 1.0, 1)})`);
+          if (t > 1.9) wrapText(args.blackout_text, W / 2, H / 2, 520, 9, "#ffffff");
+        }
+      }
+
+      function wrapText(str, x, y, maxWidth, size, color) {
+        ctx.font = `${size}px ${FONT}`;
+        const words = str.split(" "), lines = [];
+        let line = "";
+        words.forEach(w => {
+          const test = line ? line + " " + w : w;
+          if (ctx.measureText(test).width > maxWidth) { lines.push(line); line = w; } else line = test;
+        });
+        lines.push(line);
+        lines.forEach((l, i) => text(l, x, y + (i - (lines.length - 1) / 2) * (size * 2.2), size, color));
+      }
+
+      const RACKETS = { wilson: "#1f5e3a", yonex: "#5aa9e6", original: "#2d3a5a" };
+
+      function draw() {
+        ctx.save();
+        if (shake > 0) ctx.translate(rand(-3, 3), rand(-3, 3));
+        drawCourt();
+        drawPerson(opp.x, OPP_Y, "#e67e22",
+                   { shorts: "#ffffff", hair: "#222222", band: null, stripe: null, racket: "#c0392b", swing: opp.swing });
+        drawNet();
+        if (ball && ball.from === "p") drawBall();
+        drawIndicator();
+        drawPerson(player.x, PLAYER_Y, "#ffffff",
+                   { shorts: "#f0f0f0", hair: "#5b3a22", band: "#d9743a", stripe: "#d9743a",
+                     racket: RACKETS[args.racket] || RACKETS.original, swing: player.swing, glow: glow });
+        if (ball && ball.from === "o") drawBall();
+        particles.forEach(p => rect(p.x, p.y, 2, 2, p.color));
+        if (snap) drawSnap();
+        ctx.restore();
+        drawBar();
+        drawHud();
+        if (blackout) drawBlackout();
+        if (!started) drawStartScreen();
+      }
+
+      // ------------------------------------------------------------------ loop
+      let last = performance.now();
+      function frame(t) {
+        const dt = Math.min((t - last) / 1000, 0.05);
+        last = t;
+        if (args) { update(dt); draw(); }
+        requestAnimationFrame(frame);
+      }
+
+      window.addEventListener("message", event => {
+        if (!(event.data && event.data.type === "streamlit:render")) return;
+        const first = args === null;
+        args = event.data.args;
+        if (first) {
+          cfg = Object.assign({ power: 1.4 }, args.game);
+          opCfg = args.game.op ? Object.assign({}, cfg, args.game.op) : null;
+          fitToWindow();
+        }
+      });
+      window.addEventListener("resize", updateHeight);
+      send("streamlit:componentReady", { apiVersion: 1 });
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

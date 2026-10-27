@@ -305,17 +305,19 @@ def _apply_effects(state, effects, story):
     return message
 
 
-def _play_match(state, story):
-    """Stage 1: apply the fixed result of the next round."""
+def _next_outcome(state, story):
+    """The next round and its matching outcome (fixed by the story)."""
     round_ = next_round(state, story)
-    outcome = None
     for candidate in round_["outcomes"]:
         if conditions_met(state, candidate.get("when", {}), story):
-            outcome = candidate
-            break
-    if outcome is None:
-        raise ValueError(f"No matching outcome in story data for {round_['name']!r}")
+            return round_, candidate
+    raise ValueError(f"No matching outcome in story data for {round_['name']!r}")
 
+
+def _record_match(state, outcome, story):
+    """Change `state` in place (it is already a copy): add the story's result,
+    apply the outcome's effects and, after the last round, set the ending.
+    Returns the outcome text."""
     state.match_results.append(outcome["result"])
     _apply_effects(state, outcome.get("effects", {}), story)
 
@@ -327,3 +329,44 @@ def _play_match(state, story):
                 break
 
     return outcome["text"]
+
+
+def _play_match(state, story):
+    """Stage 1 / fallback: apply the fixed result of the next round."""
+    _, outcome = _next_outcome(state, story)
+    return _record_match(state, outcome, story)
+
+
+def match_setup(state, story):
+    """What the minigame needs for the next round: its name, the result the
+    story requires, and the round's game settings. None if no match is due."""
+    if not match_due(state, story):
+        return None
+    round_, outcome = _next_outcome(state, story)
+    return {"round": round_["name"], "required": outcome["result"],
+            "game": outcome.get("game", {})}
+
+
+def apply_match_result(state, reported, story):
+    """Apply what the minigame reported ("win" or "loss").
+
+    Returns (new_state, status, message). The story's result always wins:
+    - reported == required: "advanced", the round is recorded
+    - required win, reported loss: "replay", nothing changes
+    - required loss, reported win: "blackout", the round counts as lost
+    - no match due or unknown result: "rejected", nothing changes
+    """
+    if reported not in ("win", "loss") or not match_due(state, story):
+        return state, "rejected", None
+    _, outcome = _next_outcome(state, story)
+    required = outcome["result"]
+    texts = story.get("matches", {})
+
+    if reported == required:
+        new_state = _copy(state)
+        return new_state, "advanced", _record_match(new_state, outcome, story)
+    if required == "win":
+        return state, "replay", texts.get("replay_prompt")
+    new_state = _copy(state)
+    _record_match(new_state, outcome, story)
+    return new_state, "blackout", texts.get("blackout_text")
