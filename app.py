@@ -331,7 +331,8 @@ with main_col:
 
     scene_view(
         svg=scene_svg_with_player(state),
-        hotspots=logic.scene_hotspots(state, story),
+        hotspots=[dict(h, preview_svg=read_asset(h["preview"]) if h.get("preview") else None)
+                  for h in logic.scene_hotspots(state, story)],
         player=player_position(state),  # where the player stands now, for walking
         message=message,
         width=IMAGE_W,

@@ -179,6 +179,7 @@ def scene_hotspots(state, story):
                 "allowed": conditions_met(state, action.get("requires", {}), story),
                 "walk_to": spot.get("walk_to"),
                 "drop": spot.get("drop"),
+                "preview": action.get("preview"),   # e.g. an outfit shown on hover
             }
         )
     return hotspots

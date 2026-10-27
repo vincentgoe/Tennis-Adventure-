@@ -418,7 +418,8 @@
             "w": 292,
             "h": 104,
             "name": "Lockers"
-          }
+          },
+          "preview": "sprites/player.svg"
         },
         {
           "id": "change_black",
@@ -442,7 +443,8 @@
             "w": 292,
             "h": 104,
             "name": "Lockers"
-          }
+          },
+          "preview": "sprites/player_black.svg"
         },
         {
           "id": "change_pink",
@@ -466,7 +468,8 @@
             "w": 292,
             "h": 104,
             "name": "Lockers"
-          }
+          },
+          "preview": "sprites/player_pink.svg"
         },
         {
           "id": "leave_locker_room",
