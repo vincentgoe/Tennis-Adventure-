@@ -41,6 +41,11 @@
                      font: 600 13px monospace; text-align: left; cursor: pointer;
                      color: #ffffff; background: #d9743a; border: 0; border-radius: 3px; }
       #menu button:hover { background: #c4642f; }
+      /* Preview of a menu choice (e.g. an outfit), shown next to the menu on hover */
+      #preview { position: absolute; display: none; z-index: 5; pointer-events: none;
+                 width: 92px; padding: 10px 8px 6px; text-align: center;
+                 background: rgba(12, 12, 12, 0.92); border: 3px solid #fbf7ee; border-radius: 6px; }
+      #preview svg { display: block; width: 76px; height: auto; margin: 0 auto; }
 
       /* Item reveal: darkened scene, turning light rays, a slowly spinning item */
       #reveal { position: absolute; inset: 0; z-index: 2; display: none; overflow: hidden;
@@ -102,6 +107,7 @@
       <div id="scene"></div>
       <svg id="overlay" xmlns="http://www.w3.org/2000/svg"></svg>
       <div id="menu"></div>
+      <div id="preview"></div>
       <div id="reveal"><div id="rays"></div><div id="item"><div class="spinner"></div></div></div>
       <div id="catcher"></div>
       <div id="dialog" class="game-text"><div id="speaker"></div><div id="dialog-text"></div><div class="more">▼</div></div>
@@ -143,13 +149,27 @@
         const box = wrap.getBoundingClientRect();
         return { x: event.clientX - box.left, y: event.clientY - box.top };
       }
-      function hideMenu() { menu.style.display = "none"; }
+      function hideMenu() { menu.style.display = "none"; hidePreview(); }
+      function hidePreview() { $("preview").style.display = "none"; }
+      function showPreview(spot) {
+        const box = $("preview");
+        if (!spot.preview_svg) { hidePreview(); return; }
+        box.innerHTML = spot.preview_svg;
+        box.style.display = "block";
+        // next to the menu: right of it if there is room, otherwise left
+        const right = menu.offsetLeft + menu.offsetWidth + 8;
+        const left = right + box.offsetWidth < wrap.offsetWidth ? right : menu.offsetLeft - box.offsetWidth - 8;
+        box.style.left = Math.max(left, 4) + "px";
+        box.style.top = Math.max(Math.min(menu.offsetTop, wrap.offsetHeight - box.offsetHeight - 4), 4) + "px";
+      }
       function showMenu(event, group) {
         menu.innerHTML = "";
         group.forEach(spot => {
           const button = document.createElement("button");
           button.textContent = spot.label;
           button.addEventListener("click", e => { e.stopPropagation(); activate(spot); });
+          button.addEventListener("mouseenter", () => showPreview(spot));
+          button.addEventListener("mouseleave", hidePreview);
           menu.appendChild(button);
         });
         menu.style.display = "block";

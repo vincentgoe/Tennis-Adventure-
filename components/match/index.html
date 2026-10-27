@@ -377,7 +377,7 @@
         ctx.beginPath(); ctx.ellipse(p.x, p.y, 9 * s, 2.5 * s, 0, 0, Math.PI * 2); ctx.fill();
         R(1, 26, 5, 5, opts.shorts); R(8, 26, 5, 5, opts.shorts);
         R(1, 31, 5, 5, "#f2c49b"); R(8, 31, 5, 5, "#f2c49b");
-        R(0, 36, 6, 3, "#fafafa"); R(8, 36, 6, 3, "#fafafa");
+        R(0, 36, 6, 3, opts.shoes || "#fafafa"); R(8, 36, 6, 3, opts.shoes || "#fafafa");
         R(0, 12, 14, 15, shirt);
         if (opts.stripe) R(0, 18, 14, 2, opts.stripe);
         R(2, 0, 10, 11, "#f2c49b"); R(2, 0, 10, 3, opts.hair);
@@ -535,6 +535,12 @@
       }
 
       const RACKETS = { wilson: "#1f5e3a", yonex: "#5aa9e6", original: "#2d3a5a" };
+      // The outfit chosen in the locker room (specs/outfit-choice.md)
+      const KITS = {
+        white: { shirt: "#ffffff", shorts: "#f0f0f0", shoes: "#fafafa", accent: "#d9743a" },
+        black: { shirt: "#1c1c1c", shorts: "#161616", shoes: "#111111", accent: "#4a4a4a" },
+        pink:  { shirt: "#ff7eb6", shorts: "#ff6aa8", shoes: "#ff9cc7", accent: "#d63384" },
+      };
 
       function draw() {
         ctx.save();
@@ -545,8 +551,9 @@
         drawNet();
         if (ball && ball.from === "p") drawBall();
         drawIndicator();
-        drawPerson(player.x, PLAYER_Y, "#ffffff",
-                   { shorts: "#f0f0f0", hair: "#5b3a22", band: "#d9743a", stripe: "#d9743a",
+        const kit = KITS[args.kit] || KITS.white;
+        drawPerson(player.x, PLAYER_Y, kit.shirt,
+                   { shorts: kit.shorts, shoes: kit.shoes, hair: "#5b3a22", band: kit.accent, stripe: kit.accent,
                      racket: RACKETS[args.racket] || RACKETS.original, swing: player.swing, glow: glow });
         if (ball && ball.from === "o") drawBall();
         particles.forEach(p => rect(p.x, p.y, 2, 2, p.color));

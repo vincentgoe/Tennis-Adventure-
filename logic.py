@@ -179,6 +179,7 @@ def scene_hotspots(state, story):
                 "allowed": conditions_met(state, action.get("requires", {}), story),
                 "walk_to": spot.get("walk_to"),
                 "drop": spot.get("drop"),
+                "preview": action.get("preview"),   # e.g. an outfit shown on hover
             }
         )
     return hotspots
@@ -189,6 +190,13 @@ def player_image(state, story):
     outfit), from the top-level `player` list in the story. None if unset."""
     entry = first_matching_entry(story.get("player", []), state, story)
     return entry["image"] if entry is not None else None
+
+
+def page_image(state, page, story):
+    """The image of an ending page for this state: the first matching entry of
+    its `images` list (e.g. the chosen outfit), otherwise its `image`."""
+    entry = first_matching_entry(page.get("images", []), state, story)
+    return entry["image"] if entry is not None else page.get("image")
 
 
 def _message_source(state, action_id, story):
