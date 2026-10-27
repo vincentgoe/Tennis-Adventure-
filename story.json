@@ -1159,7 +1159,18 @@
               },
               "image": "endings/stranger_pink.svg"
             }
-          ]
+          ],
+          "captions": [
+            {
+              "at": 0,
+              "text": "As the crowd drifts away, a stranger in a cap walks up to you."
+            },
+            {
+              "at": 14.0,
+              "text": "He turns it slowly in his hands, his thumb resting on the faded letters on the frame. A smile spreads across his face."
+            }
+          ],
+          "captions_until": 25.6
         }
       ]
     },

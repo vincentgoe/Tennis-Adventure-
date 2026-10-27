@@ -47,6 +47,14 @@
                  background: rgba(12, 12, 12, 0.92); border: 3px solid #fbf7ee; border-radius: 6px; }
       #preview svg { display: block; width: 76px; height: auto; margin: 0 auto; }
 
+      /* Description of the surroundings, top left (specs/end-scene-polish.md) */
+      #desc { position: absolute; top: 8px; left: 8px; max-width: 46%; z-index: 1;
+              display: none; pointer-events: none; transition: opacity 0.3s;
+              background: rgba(12, 12, 12, 0.68); color: #ffffff;
+              border: 2px solid rgba(251, 247, 238, 0.85); border-radius: 4px;
+              padding: 9px 11px; font-size: 9px; line-height: 1.85; }
+      .talking #desc { opacity: 0; }
+
       /* Item reveal: darkened scene, turning light rays, a slowly spinning item */
       #reveal { position: absolute; inset: 0; z-index: 2; display: none; overflow: hidden;
                 background: radial-gradient(circle at 50% 42%, rgba(60, 45, 15, 0.55), rgba(0, 0, 0, 0.88)); }
@@ -109,6 +117,7 @@
     <div id="wrap">
       <div id="scene"></div>
       <svg id="overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="desc" class="game-text"></div>
       <div id="menu"></div>
       <div id="preview"></div>
       <div id="reveal"><div id="rays"></div><div id="item"><div class="spinner"></div></div></div>
@@ -467,6 +476,32 @@
       }
       try { window.parent.addEventListener("resize", fitToWindow); } catch (e) { /* ignore */ }
 
+      // --- Description box (top left) and timed captions ------------------------
+      let captionStart = 0, captionTimer = null, shownDesc = null;
+      function setDesc(text) {
+        if (text === shownDesc) return;
+        shownDesc = text;
+        const box = $("desc");
+        if (!text) { box.style.display = "none"; return; }
+        box.innerHTML = "";
+        segments(text).forEach(seg => {
+          const span = document.createElement(seg.em ? "em" : "span");
+          span.textContent = seg.text;
+          box.appendChild(span);
+        });
+        box.style.display = "block";
+      }
+      function updateDesc() {
+        if (args.captions && args.captions.length) {
+          const t = (performance.now() - captionStart) / 1000;
+          const until = args.captions_until || Infinity;
+          const current = args.captions.filter(c => c.at <= t).pop();
+          setDesc(t < until && current ? current.text : null);
+        } else {
+          setDesc(args.description || null);
+        }
+      }
+
       function render(newArgs) {
         args = newArgs;
         fitToWindow();
@@ -474,7 +509,12 @@
         if (sceneKey !== lastScene) {
           lastScene = sceneKey;
           drawScene();
+          captionStart = performance.now();      // captions count from when the picture appears
+          shownDesc = undefined;
         }
+        updateDesc();
+        clearInterval(captionTimer);
+        if (args.captions && args.captions.length) captionTimer = setInterval(updateDesc, 200);
         const message = args.message;
         if (!message) {
           endConversation();
