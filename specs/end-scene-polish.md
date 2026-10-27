@@ -44,10 +44,10 @@ should give the player time to read.
 
 ## Done when
 
-- [ ] New tests written first and green: the stranger page has the two
+- [x] New tests written first and green: the stranger page has the two
       captions above, in order, the first at 0 s; Ending B ends with an end
       screen page.
-- [ ] All existing tests are still green and unchanged.
-- [ ] Manual check: description boxes in scenes and endings, the ceremony
+- [x] All existing tests are still green and unchanged.
+- [x] Manual check: description boxes in scenes and endings, the ceremony
       ground, and the stranger scene timing and captions.
 - [ ] Committed on `end-scene-polish`, pushed, reviewed, merged into `main`.

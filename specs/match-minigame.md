@@ -128,7 +128,7 @@ The game reports only `win` or `loss`. `logic.py` decides what it means:
 
 ## Done when
 
-- [ ] New tests written first and green:
+- [x] New tests written first and green:
   - `match_setup` returns the next round's settings and required result, and
     `None` when no match is due.
   - `apply_match_result` covers all four rows of the table above, keeps the
@@ -136,8 +136,8 @@ The game reports only `win` or `loss`. `logic.py` decides what it means:
     final.
   - In `story.json`, every match outcome has a valid `game` block, round 2 has
     the `string_break` event.
-- [ ] All existing tests are still green and unchanged.
-- [ ] Manual check: play round 1 with keyboard and with mouse, lose round 2 by
+- [x] All existing tests are still green and unchanged.
+- [x] Manual check: play round 1 with keyboard and with mouse, lose round 2 by
       the snapping string, win round 3 and the final with the Yonex; try losing
       a must-win round (replay / give up) and winning a must-lose round
       (blackout).
