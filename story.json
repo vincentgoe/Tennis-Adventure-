@@ -5,6 +5,24 @@
     {
       "when": {
         "flags": [
+          "changed",
+          "outfit_black"
+        ]
+      },
+      "image": "sprites/player_black.svg"
+    },
+    {
+      "when": {
+        "flags": [
+          "changed",
+          "outfit_pink"
+        ]
+      },
+      "image": "sprites/player_pink.svg"
+    },
+    {
+      "when": {
+        "flags": [
           "changed"
         ]
       },
@@ -380,7 +398,7 @@
       "actions": [
         {
           "id": "change",
-          "label": "Get changed",
+          "label": "Change into the white kit",
           "requires": {
             "not_flags": [
               "changed"
@@ -388,7 +406,56 @@
           },
           "effects": {
             "set_flags": [
+              "changed",
+              "outfit_white"
+            ],
+            "show_text": "You change into your tennis kit and check your racket one last time. The strings feel good. Time to play."
+          },
+          "icon": ":material/checkroom:",
+          "hotspot": {
+            "x": 16,
+            "y": 16,
+            "w": 292,
+            "h": 104,
+            "name": "Lockers"
+          }
+        },
+        {
+          "id": "change_black",
+          "label": "Change into the black kit",
+          "requires": {
+            "not_flags": [
               "changed"
+            ]
+          },
+          "effects": {
+            "set_flags": [
+              "changed",
+              "outfit_black"
+            ],
+            "show_text": "You change into your tennis kit and check your racket one last time. The strings feel good. Time to play."
+          },
+          "icon": ":material/checkroom:",
+          "hotspot": {
+            "x": 16,
+            "y": 16,
+            "w": 292,
+            "h": 104,
+            "name": "Lockers"
+          }
+        },
+        {
+          "id": "change_pink",
+          "label": "Change into the pink kit",
+          "requires": {
+            "not_flags": [
+              "changed"
+            ]
+          },
+          "effects": {
+            "set_flags": [
+              "changed",
+              "outfit_pink"
             ],
             "show_text": "You change into your tennis kit and check your racket one last time. The strings feel good. Time to play."
           },
@@ -1032,12 +1099,48 @@
         {
           "name": "Award ceremony",
           "text": "Confetti rains down as you lift the trophy. The crowd cheers your name.",
-          "image": "endings/ceremony_win.svg"
+          "image": "endings/ceremony_win.svg",
+          "images": [
+            {
+              "when": {
+                "flags": [
+                  "outfit_black"
+                ]
+              },
+              "image": "endings/ceremony_win_black.svg"
+            },
+            {
+              "when": {
+                "flags": [
+                  "outfit_pink"
+                ]
+              },
+              "image": "endings/ceremony_win_pink.svg"
+            }
+          ]
         },
         {
           "name": "A stranger",
           "text": "As the crowd drifts away, a stranger in a cap walks up to you. \"May I take a look at that racket?\" He turns it slowly in his hands, his thumb resting on the faded letters on the frame. A smile spreads across his face. \"You made a good choice, kid.\" He hands it back, and before you can say a word, he's gone.",
-          "image": "endings/stranger.svg"
+          "image": "endings/stranger.svg",
+          "images": [
+            {
+              "when": {
+                "flags": [
+                  "outfit_black"
+                ]
+              },
+              "image": "endings/stranger_black.svg"
+            },
+            {
+              "when": {
+                "flags": [
+                  "outfit_pink"
+                ]
+              },
+              "image": "endings/stranger_pink.svg"
+            }
+          ]
         }
       ]
     },
@@ -1048,7 +1151,25 @@
         {
           "name": "Award ceremony",
           "text": "You stand on the second step as the winner lifts the trophy, clapping along with the crowd. So close.",
-          "image": "endings/ceremony_loss.svg"
+          "image": "endings/ceremony_loss.svg",
+          "images": [
+            {
+              "when": {
+                "flags": [
+                  "outfit_black"
+                ]
+              },
+              "image": "endings/ceremony_loss_black.svg"
+            },
+            {
+              "when": {
+                "flags": [
+                  "outfit_pink"
+                ]
+              },
+              "image": "endings/ceremony_loss_pink.svg"
+            }
+          ]
         }
       ]
     }

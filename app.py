@@ -281,7 +281,7 @@ with main_col:
             st.markdown(st.session_state.feedback["text"])
         page = pages[index]
         st.header(page["name"])
-        show_image(page.get("image"), width=900)
+        show_image(logic.page_image(state, page, story), width=900)
         st.markdown(page["text"])
         if index < len(pages) - 1:
             st.button(ui["continue"], icon=":material/arrow_forward:", type="primary",
@@ -311,6 +311,7 @@ with main_col:
                 game=setup["game"],
                 must_lose=setup["required"] == "loss",
                 racket=state.choices.get("racket", "original"),
+                kit=next((c for c in ("black", "pink") if f"outfit_{c}" in state.flags), "white"),
                 blackout_text=story["matches"]["blackout_text"],
                 ui={"start": ui["match_start"], "controls": ui["match_controls"],
                     "aim": ui["match_aim"], "tutorial": ui["match_tutorial"]},

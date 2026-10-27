@@ -191,6 +191,13 @@ def player_image(state, story):
     return entry["image"] if entry is not None else None
 
 
+def page_image(state, page, story):
+    """The image of an ending page for this state: the first matching entry of
+    its `images` list (e.g. the chosen outfit), otherwise its `image`."""
+    entry = first_matching_entry(page.get("images", []), state, story)
+    return entry["image"] if entry is not None else page.get("image")
+
+
 def _message_source(state, action_id, story):
     """The action itself if it is allowed, otherwise its matching blocked
     text entry. None if there is no such action or no blocked text."""
