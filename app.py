@@ -5,6 +5,7 @@ saving and loading in db.py. Images live in assets/ and are referenced from
 story.json.
 """
 
+import math
 from pathlib import Path
 
 import streamlit as st
@@ -81,6 +82,31 @@ def player_position(state):
     return default
 
 
+def sun_svg(progress, horizon):
+    """A sun for the tournament day (specs/daylight.md): high on the left in
+    the morning, a step further right after each match, warmer in the evening.
+    The sky tint gets warmer too."""
+    x = 34 + progress * 260
+    y = 26 - 12 * math.sin(math.pi * min(progress, 1))
+    warm = min(progress / 0.75, 1)
+    core = "#%02x%02x%02x" % (255, int(228 - 60 * warm), int(107 - 40 * warm))
+    return (
+        f'<rect x="0" y="0" width="{IMAGE_W}" height="{horizon}" fill="#ff9a3c" opacity="{0.22 * progress:.2f}"/>'
+        f'<g shape-rendering="auto"><circle cx="{x:.1f}" cy="{y:.1f}" r="16" fill="{core}" opacity="0.3"/>'
+        f'<circle cx="{x:.1f}" cy="{y:.1f}" r="10" fill="{core}"/></g>'
+    )
+
+
+def with_sun(svg, state):
+    """Draw the sun into an outdoor scene, just above its sky (behind everything else)."""
+    sky = story["scenes"][state.scene].get("sky")
+    marker = 'fill="url(#sky)"'
+    if not sky or marker not in svg:
+        return svg
+    end = svg.index("/>", svg.index(marker)) + 2
+    return svg[:end] + sun_svg(logic.day_progress(state, story), sky["horizon"]) + svg[end:]
+
+
 def scene_svg_with_player(state):
     """The scene image as SVG text, with the player figure drawn into it.
 
@@ -88,7 +114,7 @@ def scene_svg_with_player(state):
     It is wrapped in <g id="player"><g class="hop"> so the component can let
     it walk and hop.
     """
-    svg = read_asset(logic.scene_image(state, story)).strip()
+    svg = with_sun(read_asset(logic.scene_image(state, story)).strip(), state)
     player = player_position(state)
     sprite_path = logic.player_image(state, story)
     if player is None or sprite_path is None:
@@ -312,6 +338,7 @@ with main_col:
                 must_lose=setup["required"] == "loss",
                 racket=state.choices.get("racket", "original"),
                 kit=next((c for c in ("black", "pink") if f"outfit_{c}" in state.flags), "white"),
+                day=logic.day_progress(state, story),
                 blackout_text=story["matches"]["blackout_text"],
                 ui={"start": ui["match_start"], "controls": ui["match_controls"],
                     "aim": ui["match_aim"], "tutorial": ui["match_tutorial"]},

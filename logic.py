@@ -345,6 +345,13 @@ def _play_match(state, story):
     return _record_match(state, outcome, story)
 
 
+def day_progress(state, story):
+    """How far the tournament day is: matches played / number of rounds,
+    from 0 (before round 1) to 1 (after the final). Used for the sun."""
+    rounds = len(_rounds(story))
+    return len(state.match_results) / rounds if rounds else 0
+
+
 def match_setup(state, story):
     """What the minigame needs for the next round: its name, the result the
     story requires, and the round's game settings. None if no match is due."""
